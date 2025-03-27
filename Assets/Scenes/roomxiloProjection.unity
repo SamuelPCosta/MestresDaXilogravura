@@ -8006,6 +8006,8 @@ GameObject:
   - component: {fileID: 1179590053}
   - component: {fileID: 1179590052}
   - component: {fileID: 1179590054}
+  - component: {fileID: 1179590057}
+  - component: {fileID: 1179590056}
   m_Layer: 0
   m_Name: ProjectionMode
   m_TagString: Untagged
@@ -8059,6 +8061,30 @@ MonoBehaviour:
   virtualCamera: {fileID: 5074303313919505708}
   TrackCameraOffset: {fileID: 1978294290}
   ARCamera: {fileID: 273429257}
+--- !u!114 &1179590056
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1179590051}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cdcbe275c9327943b426ad44c98e065, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1179590057
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1179590051}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c7fa1f7dc20a3b41862608a2eb55deb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1186481608 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 505d6e9f6310cd34fb9adeae50f29015, type: 3}
