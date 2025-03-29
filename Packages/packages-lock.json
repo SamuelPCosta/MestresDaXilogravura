@@ -1,12 +1,5 @@
 {
   "dependencies": {
-    "com.github-glitchenzo.nugetforunity": {
-      "version": "https://github.com/GlitchEnzo/NuGetForUnity.git?path=/src/NuGetForUnity",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {},
-      "hash": "fe31ad0904abee296b5ea72c6073157accba59e8"
-    },
     "com.ptc.vuforia.engine": {
       "version": "file:com.ptc.vuforia.engine-10.25.4.tgz",
       "depth": 0,

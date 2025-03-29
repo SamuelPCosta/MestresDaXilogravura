@@ -1,38 +1,42 @@
 using UnityEngine;
-using WebSocketSharp;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
 
-public class WebSocketConnection : MonoBehaviour
+public class UDPReceiver : MonoBehaviour
 {
-    WebSocket ws;
+    UdpClient udpClient;
+    Thread receiveThread;
     public bool ledStatus;
 
     void Start()
     {
-        Invoke("ConnectWS", 1f);
+        udpClient = new UdpClient(8764);
+        receiveThread = new Thread(ReceiveData);
+        receiveThread.IsBackground = true;
+        receiveThread.Start();
     }
 
-    public void ConnectWS()
+    void ReceiveData()
     {
-        ws = new WebSocket("ws://localhost:8764");
-        ws.OnMessage += OnMessageReceived;
-        ws.OnOpen += (sender, e) => {
-            Debug.Log("WebSocket conectado com sucesso!");
-        };
-        ws.OnError += (sender, e) => {
-            Debug.LogError("Erro na conex�o WebSocket: " + e.Message);
-        };
-        ws.Connect();
-    }
-
-    void OnMessageReceived(object sender, MessageEventArgs e)
-    {
-        string receivedData = e.Data.Trim().ToLower();
-        ledStatus = receivedData == "true";
-        Debug.LogError("LED Status: " + ledStatus);
+        IPEndPoint remoteEP = new IPEndPoint(IPAddress.Any, 8764);
+        while (true)
+        {
+            try
+            {
+                byte[] data = udpClient.Receive(ref remoteEP);
+                string receivedData = Encoding.UTF8.GetString(data).Trim().ToLower();
+                ledStatus = receivedData == "true";
+                Debug.Log("LED Status: " + ledStatus);
+            }
+            catch (SocketException) { }
+        }
     }
 
     void OnDestroy()
     {
-        if (ws?.IsAlive == true) ws.Close();
+        receiveThread?.Abort();
+        udpClient?.Close();
     }
 }
