@@ -1,39 +1,50 @@
 using System.Diagnostics;
 using UnityEngine;
+using System.IO;
 
 public class PythonLauncher : MonoBehaviour
 {
-    private Process pythonProcess;
+    private Process process;
 
     void Start()
     {
-        StartPythonScript();
-    }
+        string pythonScriptPath = Path.Combine(Application.streamingAssetsPath, "detectLed.py");
+        pythonScriptPath = "\"" + pythonScriptPath + "\"";
 
-    void StartPythonScript()
-    {
-        pythonProcess = new Process();
-        pythonProcess.StartInfo.FileName = "python";  //"python3" dependendo do sistema
-        pythonProcess.StartInfo.Arguments = "detectLed.py";
-        pythonProcess.StartInfo.UseShellExecute = false;
-        pythonProcess.StartInfo.RedirectStandardOutput = true;
-        pythonProcess.StartInfo.RedirectStandardError = true;
-        pythonProcess.StartInfo.CreateNoWindow = true;
+        ProcessStartInfo psi = new ProcessStartInfo();
+        psi.FileName = "python";
+        psi.Arguments = pythonScriptPath;
+        psi.UseShellExecute = false;
+        psi.RedirectStandardOutput = true;
+        psi.RedirectStandardError = true;
+        psi.CreateNoWindow = true;
 
-        pythonProcess.OutputDataReceived += (sender, e) => UnityEngine.Debug.Log("Python: " + e.Data);
-        pythonProcess.ErrorDataReceived += (sender, e) => UnityEngine.Debug.LogError("Python Error: " + e.Data);
+        process = new Process();
+        process.StartInfo = psi;
 
-        pythonProcess.Start();
-        pythonProcess.BeginOutputReadLine();
-        pythonProcess.BeginErrorReadLine();
+        process.OutputDataReceived += (sender, args) => UnityEngine.Debug.Log("Python Output: " + args.Data);
+        process.ErrorDataReceived += (sender, args) => UnityEngine.Debug.LogError("Python Error: " + args.Data);
+
+        try
+        {
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+
+            UnityEngine.Debug.Log("Python script started successfully.");
+        }
+        catch (System.Exception ex)
+        {
+            UnityEngine.Debug.LogError("Error starting Python process: " + ex.Message);
+        }
     }
 
     void OnApplicationQuit()
     {
-        if (pythonProcess != null && !pythonProcess.HasExited)
+        if (process != null && !process.HasExited)
         {
-            pythonProcess.Kill();
-            pythonProcess.Dispose();
+            UnityEngine.Debug.Log("Closing Python process...");
+            process.Kill();
         }
     }
 }

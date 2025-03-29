@@ -440,7 +440,8 @@ public class MenuController : MonoBehaviour
             return slider.value;
         else return 0;
     }
-
+    
+    #if UNITY_EDITOR
     public void ClearLog()
     {
         var assembly = System.Reflection.Assembly.GetAssembly(typeof(SceneView));
@@ -449,4 +450,5 @@ public class MenuController : MonoBehaviour
         clearMethod.Invoke(null, null);
         Debug.Log("Lets go!");
     }
+    #endif
 }
