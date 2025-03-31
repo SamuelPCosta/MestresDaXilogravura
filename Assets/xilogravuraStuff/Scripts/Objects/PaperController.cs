@@ -74,6 +74,8 @@ public class PaperController : InteractiveObject
         if (hit != null)
         {
             RaycastHit validHit = hit.Value;
+            validHit.point = new Vector3(-validHit.point.x, validHit.point.y, validHit.point.z); //TESTE INVTERTER X
+
             painter.PaintMask(textureDictionary["PrintMask"], validHit, false);
             if (validHit.collider == null || (painter.mode.mode == Mode.VR && grabController.isToolNull()))
                 painter.stopSound(ferramenta.gameObject);

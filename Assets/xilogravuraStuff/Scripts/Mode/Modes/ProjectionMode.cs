@@ -5,6 +5,7 @@ using UnityEngine;
 public class ProjectionMode : ExperienceMode
 {
     public int paintAngle = 350;
+    public UDPReceiver tracking;
     private Transform tool = null;
 
     public void Start()
@@ -27,7 +28,8 @@ public class ProjectionMode : ExperienceMode
 
         if (tool.name.Equals("colher"))
             return true;
-        return tool.parent.transform.localPosition.z >= 0f;
+
+        return tracking.ledStatus;
     }
 
     public void setTool(Transform tool){

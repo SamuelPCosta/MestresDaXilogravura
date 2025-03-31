@@ -6,25 +6,26 @@ using System.Threading;
 using System;
 using System.Collections.Generic;
 
-public enum Tools
-{
-    PENCIL,
-    GOUGE
-};
-
 public class UDPReceiver : MonoBehaviour
 {
     UdpClient udpClient;
     Thread receiveThread;
+    public ProjectionMode mode;
     public RenderTexture displayTarget;
     private Texture2D _receivedTexture;
     public bool ledStatus;
-    public Transform testObj;
+    public bool isCursor = false;
+    public Transform pointer;
+    public Transform[] tools;
+    public Transform[] boardTools;
+    private Transform currentTool;
     private Queue<System.Action> mainThreadActions = new Queue<System.Action>();
 
     private float _timer = 0f;
     private const float TargetFPS = 20f; //20 verificacoes dos dados por segundo
     private const float FrameTime = 1f / TargetFPS;
+
+    private const int POINTER_ID = 10;
 
     void Start()
     {
@@ -38,7 +39,6 @@ public class UDPReceiver : MonoBehaviour
     void Update()
     {
         _timer += Time.deltaTime;
-
         if (_timer >= FrameTime)
         {
             while (mainThreadActions.Count > 0)
@@ -52,48 +52,20 @@ public class UDPReceiver : MonoBehaviour
     void ReceiveData()
     {
         IPEndPoint remoteEP = new IPEndPoint(IPAddress.Any, 8764);
-        while (true)
-        {
-            try
-            {
+        while (true){
+            try{
                 byte[] data = udpClient.Receive(ref remoteEP);
                 string receivedData = Encoding.UTF8.GetString(data).Trim();
                 try
                 {
                     var jsonData = JsonUtility.FromJson<UDPData>(receivedData);
                     ledStatus = jsonData.led == "true";
+                    if (ledStatus) Debug.Log(jsonData.id);
 
-                    if (ledStatus)
-                    {
-                        Debug.Log(jsonData.id);
-                    }
-
-                    if (jsonData.id >= 0)
-                    {
-                        if (jsonData.position != null && jsonData.position.Count >= 3 &&
-                            jsonData.rotation != null && jsonData.rotation.Count >= 3)
-                        {
-                            mainThreadActions.Enqueue(() => {
-                                UpdateTransform(jsonData);
-                            });
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(jsonData.frame))
-                    {
-                        byte[] imageBytes = Convert.FromBase64String(jsonData.frame);
-                        mainThreadActions.Enqueue(() => {
-                            if (_receivedTexture.width != 2 || _receivedTexture.height != 2)
-                            {
-                                _receivedTexture.Reinitialize(2, 2);
-                            }
-                            _receivedTexture.LoadImage(imageBytes);
-                            Graphics.Blit(_receivedTexture, displayTarget);
-                        });
-                    }
+                    checkTool(jsonData);
+                    showFrame(jsonData);
                 }
-                catch (Exception e)
-                {
+                catch (Exception e){
                     Debug.LogError("Erro ao processar JSON: " + e.Message);
                 }
             }
@@ -101,7 +73,81 @@ public class UDPReceiver : MonoBehaviour
         }
     }
 
-    private void UpdateTransform(UDPData data)
+    private void checkTool(UDPData jsonData)
+    {
+        if (jsonData.id == POINTER_ID)
+        {
+            mainThreadActions.Enqueue(() => {
+                pointer.gameObject.SetActive(true);
+                foreach (Transform t in tools)
+                    t.gameObject.SetActive(false);
+                foreach (Transform t in boardTools)
+                    t.gameObject.SetActive(true);
+
+                currentTool = pointer;
+                isCursor = true;
+                UpdateTransform(jsonData, true);
+            });
+        }
+        else
+        if (jsonData.id >= 0)
+        {
+            if (jsonData.position != null && jsonData.position.Count >= 3 &&
+                jsonData.rotation != null && jsonData.rotation.Count >= 3)
+            {
+                mainThreadActions.Enqueue(() => {
+                    bool ret = UpdateTool(jsonData);
+                    if (ret) { 
+                        UpdateTransform(jsonData, false);
+                        mode.setTool(tools[jsonData.id]);
+                    }
+                });
+            }
+        }
+        else{
+            mainThreadActions.Enqueue(() => {
+                isCursor = false;
+                pointer.gameObject.SetActive(false);
+
+                foreach (Transform t in tools)
+                    t.gameObject.SetActive(false);
+                foreach (Transform t in boardTools)
+                    t.gameObject.SetActive(true);
+                currentTool = null;
+                mode.resetTool();
+            });
+        }
+    }
+
+    private void showFrame(UDPData jsonData)
+    {
+        if (!string.IsNullOrEmpty(jsonData.frame)){
+            byte[] imageBytes = Convert.FromBase64String(jsonData.frame);
+            mainThreadActions.Enqueue(() => {
+                if (_receivedTexture.width != 2 || _receivedTexture.height != 2)
+                    _receivedTexture.Reinitialize(2, 2);
+                _receivedTexture.LoadImage(imageBytes);
+                Graphics.Blit(_receivedTexture, displayTarget);
+            });
+        }
+    }
+
+    private bool UpdateTool(UDPData data)
+    {
+        for (int i = 0; i < tools.Length; i++) { 
+            tools[i].gameObject.SetActive(data.id == i);
+            if(data.id == i) { 
+                currentTool = tools[i];
+                boardTools[i].gameObject.SetActive(false);
+            }
+        }
+
+        if (currentTool == null)
+            return false;
+        return true;
+    }
+
+    private void UpdateTransform(UDPData data, bool Movement2D)
     {
         float influency = -0.25f;
         float influencyRoatation = 58f;
@@ -110,14 +156,17 @@ public class UDPReceiver : MonoBehaviour
         Vector3 targetPosition = new Vector3(
             data.position[0],
             data.position[1],
-            data.position[2]
+            !Movement2D ? data.position[2] : currentTool.localPosition.z
         ) * influency;
 
-        testObj.localPosition = Vector3.Lerp(
-            testObj.localPosition,
+        currentTool.localPosition = Vector3.Lerp(
+            currentTool.localPosition,
             targetPosition,
             lerpFactor
         );
+
+        if (Movement2D)
+            return;
 
         Quaternion targetRotation = Quaternion.Euler(
             data.rotation[0] * influencyRoatation,
@@ -125,8 +174,8 @@ public class UDPReceiver : MonoBehaviour
             data.rotation[2] * influencyRoatation
         );
 
-        testObj.localRotation = Quaternion.Lerp(
-            testObj.localRotation,
+        currentTool.localRotation = Quaternion.Lerp(
+            currentTool.localRotation,
             targetRotation,
             lerpFactor
         );

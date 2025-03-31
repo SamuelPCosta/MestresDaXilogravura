@@ -25,9 +25,6 @@ public class XiloController : InteractiveObject
     public ParticleSystem poDeMadeira;
 
     [SerializeField]
-    private List<GameObject> objectNames;
-
-    [SerializeField]
     private TouchController touch;
 
     public bool isStart = false;
@@ -42,11 +39,11 @@ public class XiloController : InteractiveObject
 
     private void Awake()
     {
-        for (int i = 0; i < objectNames.Count; i++)
-        {
-            objectNames[i]?.SetActive(false);
-            //Debug.Log(objectNames[i].name);
-        }
+        //for (int i = 0; i < objectNames.Count; i++)
+        //{
+        //    objectNames[i]?.SetActive(false);
+        //    //Debug.Log(objectNames[i].name);
+        //}
     }
     void Start()
     {
@@ -89,6 +86,7 @@ public class XiloController : InteractiveObject
 
         if ((hit = painter.CheckDraw(lapisDeRascunho, layerMask, true, isSculped, null)) != null)
         {
+            print("a");
             mask = textureDictionary["SketchMask"];
             painter.SetBrushPreset(Brush.HardCircle);
             marcarEtapa(ref isSketched);

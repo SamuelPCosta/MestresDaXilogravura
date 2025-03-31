@@ -23,7 +23,9 @@ cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
 cap.set(cv2.CAP_PROP_FPS, 24)
 
-def resize_frame(frame, target_height=240):
+trail = []
+
+def makePreviewFrame(frame, target_height=240):
     
     target_width = int(target_height * (16/9))
     resized = cv2.resize(frame, (target_width, target_height))
@@ -45,31 +47,13 @@ try:
         # oldStatus = locals().get("led_aceso", False)
         _, thresh = cv2.threshold(gray, threshold_brilho, 255, cv2.THRESH_BINARY)
         led_aceso = np.sum(thresh == 255) > 500
-        
         # if oldStatus != led_aceso:
         #     print(led_aceso)
-            
-        # if led_aceso == False:
-        #     data = {
-        #         "led": "true" if led_aceso else "false"
-        #     }
-        #     json_data = json.dumps(data)
-        #     sock.sendto(json_data.encode(), (udp_ip, udp_port))
-        #     # print(f"Enviado: {json_data}")
-        #     continue
-        
         
         # Processa apenas o PRIMEIRO marcador (se existir)
         corners, ids, _ = detector.detectMarkers(gray)
         
-        
-        framePrev = resize_frame(frame)
-        data = {
-            "led": "true" if led_aceso else "false",
-            "id": -1,
-            "frame": framePrev
-        }
-        
+        data = {}
         if ids is not None and len(ids) > 0:
             first_corner = corners[0].reshape(-1, 2)
             first_id = int(ids[0][0])
@@ -81,9 +65,21 @@ try:
                 dist_coeffs
             )
 
+            center_x = int(np.mean(first_corner[:, 0]))
+            center_y = int(np.mean(first_corner[:, 1]))
+            
+            trail.append((center_x, center_y))
+            if len(trail) > 8:
+                trail.pop(0)
+                
+            frameTrail = frame.copy()
+            for i in range(1, len(trail)):
+                cv2.line(frameTrail, trail[i - 1], trail[i], (0, 255, 0), 15)
+            
             if success:
                 cv2.aruco.drawDetectedMarkers(frame, [corners[0]], np.array([[first_id]]))
                 cv2.drawFrameAxes(frame, camera_matrix, dist_coeffs, rvec, tvec, 0.03)
+                framePrev = makePreviewFrame(frameTrail)
                 data = {
                     "led": "true" if led_aceso else "false",
                     "id": first_id,
@@ -93,20 +89,23 @@ try:
                         float(tvec[2][0])  # Z
                     ],
                     "rotation": [
-                        float(rvec[0][0]), #X (em graus)
-                        float(rvec[1][0]), #Y (em graus)
-                        float(rvec[2][0])  #Z (em graus)
+                        float(rvec[0][0]),
+                        float(rvec[1][0]),
+                        float(rvec[2][0])
                     ],
                     "frame": framePrev
                 }
+        else:
+            trail.clear()
+            framePrev = makePreviewFrame(frame)
+            data = {
+                "led": "true" if led_aceso else "false",
+                "id": -1,
+                "frame": framePrev
+            }
                 
         json_data = json.dumps(data)
         sock.sendto(json_data.encode(), (udp_ip, udp_port))
-        #print(f"Enviado: {json_data}")
-        # Mostra a imagem
-        # cv2.imshow("ArUco Detection", frame)
-        # if cv2.waitKey(1) & 0xFF == ord('q'):
-        #     break
 
         time.sleep(0.1)
 

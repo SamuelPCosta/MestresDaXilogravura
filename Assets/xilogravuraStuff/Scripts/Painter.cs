@@ -105,11 +105,11 @@ public class Painter : MonoBehaviour
                                         || layerMask == 1 << LayerMask.NameToLayer("newArt");
                     if ((distance > maxDistance) && frontRaycast || (distance > maxDistanceGlass) && !frontRaycast){
                         disableActionTool(layerMask, tool, particles);
-                        menuController.enableTextIndicator(true);
+                        //menuController.enableTextIndicator(true);
                         return null;
                     }
                 }
-                menuController.enableTextIndicator(false);
+                //menuController.enableTextIndicator(false);
 
                 //excecao para angulo da goiva
                 if (tool.name.Equals("goiva") && !checkAngle(hit, 0.85f))
