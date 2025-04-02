@@ -29,9 +29,10 @@ public class TrackingBtnController : MonoBehaviour
 
         foreach (var result in results)
         {
+            Debug.Log("Detectado: " + result.gameObject.name);
             if (result.gameObject.GetComponent<Button>() != null)
             {
-                //Debug.Log("Sprite está sobre um botão: " + result.gameObject.name);
+                Debug.Log("Sprite está sobre um botão: " + result.gameObject.name);
                 if (tracking.ledStatus) { 
                     Button button = result.gameObject.GetComponent<Button>();
                     ExecuteEvents.Execute(button.gameObject, pointerEventData, ExecuteEvents.pointerClickHandler);
@@ -39,6 +40,17 @@ public class TrackingBtnController : MonoBehaviour
                 }
                 break;
             }
+            //else if (result.gameObject.GetComponent<Slider>() != null)
+            //{
+            //    Debug.Log("Sprite está sobre um botão: " + result.gameObject.name);
+            //    if (tracking.ledStatus)
+            //    {
+            //        Slider slider = result.gameObject.GetComponent<Slider>();
+            //        ExecuteEvents.Execute(slider.gameObject, pointerEventData, ExecuteEvents.dragHandler);
+            //        StartCoroutine(WaitForNextClick());
+            //    }
+            //    break;
+            //}
         }
     }
 

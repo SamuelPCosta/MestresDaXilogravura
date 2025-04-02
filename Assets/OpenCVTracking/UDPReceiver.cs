@@ -26,6 +26,7 @@ public class UDPReceiver : MonoBehaviour
     private const float FrameTime = 1f / TargetFPS;
 
     private const int POINTER_ID = 10;
+    private bool stabilize = false;
 
     void Start()
     {
@@ -90,7 +91,7 @@ public class UDPReceiver : MonoBehaviour
             });
         }
         else
-        if (jsonData.id >= 0)
+        if (jsonData.id >= 0 && jsonData.id < 10)
         {
             if (jsonData.position != null && jsonData.position.Count >= 3 &&
                 jsonData.rotation != null && jsonData.rotation.Count >= 3)
@@ -115,6 +116,7 @@ public class UDPReceiver : MonoBehaviour
                     t.gameObject.SetActive(true);
                 currentTool = null;
                 mode.resetTool();
+                stabilize = false;
             });
         }
     }
@@ -149,7 +151,7 @@ public class UDPReceiver : MonoBehaviour
 
     private void UpdateTransform(UDPData data, bool Movement2D)
     {
-        float influency = -0.25f;
+        float influency = -0.45f;
         float influencyRoatation = 58f;
         float lerpFactor = 0.85f;
 
@@ -159,11 +161,21 @@ public class UDPReceiver : MonoBehaviour
             !Movement2D ? data.position[2] : currentTool.localPosition.z
         ) * influency;
 
-        currentTool.localPosition = Vector3.Lerp(
+        
+        Vector3 futurePositon = Vector3.Lerp(
             currentTool.localPosition,
             targetPosition,
             lerpFactor
         );
+        float distance = Vector3.Distance(futurePositon, currentTool.localPosition);
+
+        //float distanceLimit = .32f; //magic number
+        //if (distance > distanceLimit)
+        //    return;
+
+        stabilize = true;
+
+        currentTool.localPosition = futurePositon;
 
         if (Movement2D)
             return;

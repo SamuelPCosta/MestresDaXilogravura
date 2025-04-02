@@ -125,10 +125,10 @@ public class Painter : MonoBehaviour
             }
             else
             {
-                if(mode.mode == Mode.PROJECTION && !condicaoDePintura && mode.GetComponent<ProjectionMode>().getTool() != null)
-                    menuController.enableTextIndicator(true);
-                else
-                    menuController.enableTextIndicator(false);
+                //if(mode.mode == Mode.PROJECTION && !condicaoDePintura && mode.GetComponent<ProjectionMode>().getTool() != null)
+                //    menuController.enableTextIndicator(true);
+                //else
+                //    menuController.enableTextIndicator(false);
 
                 if (mode.mode == Mode.VR || (mode.mode == Mode.PROJECTION && !raycastAnterior))
                     disableActionTool(layerMask, tool, particles);

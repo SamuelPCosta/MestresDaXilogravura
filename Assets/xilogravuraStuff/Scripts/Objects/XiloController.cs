@@ -86,7 +86,6 @@ public class XiloController : InteractiveObject
 
         if ((hit = painter.CheckDraw(lapisDeRascunho, layerMask, true, isSculped, null)) != null)
         {
-            print("a");
             mask = textureDictionary["SketchMask"];
             painter.SetBrushPreset(Brush.HardCircle);
             marcarEtapa(ref isSketched);

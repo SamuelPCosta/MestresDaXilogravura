@@ -19,11 +19,14 @@ camera_matrix = np.array([[800, 0, 320], [0, 800, 240], [0, 0, 1]], dtype=np.flo
 dist_coeffs = np.zeros((4, 1))
 
 cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
-cap.set(cv2.CAP_PROP_FPS, 24)
+# cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
+# cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
+# cap.set(cv2.CAP_PROP_FPS, 24)
 
+tvec_history = []
 trail = []
+
+SMOOTHING_FACTOR = 5
 
 def makePreviewFrame(frame, target_height=240):
     
@@ -44,11 +47,8 @@ try:
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
         # Deteccao do LED
-        # oldStatus = locals().get("led_aceso", False)
         _, thresh = cv2.threshold(gray, threshold_brilho, 255, cv2.THRESH_BINARY)
         led_aceso = np.sum(thresh == 255) > 500
-        # if oldStatus != led_aceso:
-        #     print(led_aceso)
         
         # Processa apenas o PRIMEIRO marcador (se existir)
         corners, ids, _ = detector.detectMarkers(gray)
@@ -68,26 +68,33 @@ try:
             center_x = int(np.mean(first_corner[:, 0]))
             center_y = int(np.mean(first_corner[:, 1]))
             
-            trail.append((center_x, center_y))
-            if len(trail) > 8:
-                trail.pop(0)
-                
-            frameTrail = frame.copy()
-            for i in range(1, len(trail)):
-                cv2.line(frameTrail, trail[i - 1], trail[i], (0, 255, 0), 15)
-            
             if success:
+                tvec = tvec.flatten()
+                tvec_history.append(tvec)
+
+                if len(tvec_history) > SMOOTHING_FACTOR:
+                    tvec_history.pop(0)
+
+                smoothed_tvec = np.mean(tvec_history, axis=0)
+
+                center_x = int(np.mean(first_corner[:, 0]))
+                center_y = int(np.mean(first_corner[:, 1]))
+
+                trail.append((center_x, center_y))
+                if len(trail) > 8:
+                    trail.pop(0)
+
+                frameTrail = frame.copy()
+                for i in range(1, len(trail)):
+                    cv2.line(frameTrail, trail[i - 1], trail[i], (0, 255, 0), 15)
+                    
                 cv2.aruco.drawDetectedMarkers(frame, [corners[0]], np.array([[first_id]]))
                 cv2.drawFrameAxes(frame, camera_matrix, dist_coeffs, rvec, tvec, 0.03)
                 framePrev = makePreviewFrame(frameTrail)
                 data = {
                     "led": "true" if led_aceso else "false",
                     "id": first_id,
-                    "position": [
-                        float(tvec[0][0]), # X
-                        float(tvec[1][0]), # Y
-                        float(tvec[2][0])  # Z
-                    ],
+                    "position": smoothed_tvec.tolist(),
                     "rotation": [
                         float(rvec[0][0]),
                         float(rvec[1][0]),

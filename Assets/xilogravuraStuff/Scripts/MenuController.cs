@@ -68,7 +68,7 @@ public class MenuController : MonoBehaviour
     public Color colorDisable = Color.gray;
     public TextMeshProUGUI textBrushStatus;
     public GameObject menu;
-    public GameObject UIPanel;
+    public GameObject firstInstruction;
     public AudioSource audioSource;
 
     // Start is called before the first frame update
@@ -84,7 +84,7 @@ public class MenuController : MonoBehaviour
         resultadoMenu.SetActive(false);
         restartMenu.SetActive(false);
 
-        UIPanel?.SetActive(false);
+        //firstInstruction?.SetActive(true);
 
         enableTextIndicator(false);
 
@@ -185,7 +185,7 @@ public class MenuController : MonoBehaviour
         restartMenu.SetActive(true);
     }
 
-    void NextMenu()
+    public void NextMenu()
     {
         right.enabled = false;
         switchImage = true;
@@ -199,7 +199,7 @@ public class MenuController : MonoBehaviour
         }
     }
 
-    void PreviousMenu()
+    public void PreviousMenu()
     {
         left.enabled = false;
         switchImage = true;
@@ -224,7 +224,7 @@ public class MenuController : MonoBehaviour
             art?.SetActive(false);
             voltar.gameObject.SetActive(true);
         }
-        UIPanel?.SetActive(true);
+        //firstInstruction?.SetActive(false);
     }
 
     private void Create()
@@ -321,7 +321,7 @@ public class MenuController : MonoBehaviour
         switchImage = false;
         artAutoral = false;
 
-        UIPanel?.SetActive(false);
+        //firstInstruction?.SetActive(true);
     }
 
     public void enableTextIndicator(bool state)
@@ -389,11 +389,11 @@ public class MenuController : MonoBehaviour
                     bigArrowRight.color = colorSelect;
                 }
                 else{
-                    if(slider.value != slider.maxValue){
-                        slider.value = Mathf.Clamp(slider.value + 1, slider.minValue, slider.maxValue);
-                        unlock = false;
-                        bigArrowRight.color = colorSelect;
-                    }
+                    //if(slider.value != slider.maxValue){
+                    //    slider.value = Mathf.Clamp(slider.value + 1, slider.minValue, slider.maxValue);
+                    //    unlock = false;
+                    //    bigArrowRight.color = colorSelect;
+                    //}
                 }
             }
             else if (tool.transform.localPosition.x >= detectionThreshold){
@@ -404,12 +404,12 @@ public class MenuController : MonoBehaviour
                 }
                 else
                 {
-                    if (slider.value != slider.minValue)
-                    {
-                        slider.value = Mathf.Clamp(slider.value - 1, slider.minValue, slider.maxValue);
-                        unlock = false;
-                        bigArrowLeft.color = colorSelect;
-                    }
+                    //if (slider.value != slider.minValue)
+                    //{
+                    //    slider.value = Mathf.Clamp(slider.value - 1, slider.minValue, slider.maxValue);
+                    //    unlock = false;
+                    //    bigArrowLeft.color = colorSelect;
+                    //}
                 }
             }
         }
@@ -426,12 +426,12 @@ public class MenuController : MonoBehaviour
             else
                 bigArrowLeft.color = colorDeselect;
         }
-        if (!right.IsActive() && !left.IsActive()){
-            textBrushStatus.gameObject.SetActive(true);
-            textBrushStatus.text = "Tamanho do pincel: " + displaySlidValue();
-        }
-        else
-            textBrushStatus.gameObject.SetActive(false);
+        //if (!right.IsActive() && !left.IsActive()){
+        //    textBrushStatus.gameObject.SetActive(true);
+        //    textBrushStatus.text = "Tamanho do pincel: " + displaySlidValue();
+        //}
+        //else
+        //    textBrushStatus.gameObject.SetActive(false);
     }
 
     private float displaySlidValue()
