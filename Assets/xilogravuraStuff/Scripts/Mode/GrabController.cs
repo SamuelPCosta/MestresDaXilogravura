@@ -46,7 +46,7 @@ public class GrabController : MonoBehaviour
                 if (ferramenta.gameObject.GetComponent<AudioSource>().isPlaying)
                 {
                     ferramenta.gameObject.GetComponent<AudioSource>().Stop();
-                    painter.setVerifSound(true);
+                    //painter.setVerifSound(true);
                 }
                 socket.allowHover = true;
                 ferramenta.transform.position = socket.transform.position;

@@ -91,8 +91,8 @@ public class NewArtController : InteractiveObject
         {
             RaycastHit validHit = hit.Value;
             painter.PaintMask(textureDictionary["SketchMask"], validHit, true);
-            if (validHit.collider == null || (painter.mode.mode == Mode.VR && grabController.isToolNull()))
-                painter.stopSound(lapisDeRascunho.gameObject);
+            //if (validHit.collider == null || (painter.mode.mode == Mode.VR && grabController.isToolNull()))
+            //    painter.stopSound(lapisDeRascunho.gameObject);
         }
     }
 

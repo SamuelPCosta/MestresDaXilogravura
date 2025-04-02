@@ -61,7 +61,7 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     - _isTinta: 0
-    - inkLevel: 0
-    - isTinta: 0
+    - inkLevel: 1
+    - isTinta: 1
     m_Colors: []
   m_BuildTextureStacks: []

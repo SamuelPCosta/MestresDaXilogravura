@@ -114,9 +114,9 @@ public class Painter : MonoBehaviour
                 //excecao para angulo da goiva
                 if (tool.name.Equals("goiva") && !checkAngle(hit, 0.85f))
                     return null;
-
-                checkLayer(layerMask, true);
-                initSound(tool);
+                
+                //checkLayer(layerMask, true);
+                //initSound(tool);
                 if(particles != null)
                     instanciarParticulas(particles, hit.point);
 
@@ -125,11 +125,6 @@ public class Painter : MonoBehaviour
             }
             else
             {
-                //if(mode.mode == Mode.PROJECTION && !condicaoDePintura && mode.GetComponent<ProjectionMode>().getTool() != null)
-                //    menuController.enableTextIndicator(true);
-                //else
-                //    menuController.enableTextIndicator(false);
-
                 if (mode.mode == Mode.VR || (mode.mode == Mode.PROJECTION && !raycastAnterior))
                     disableActionTool(layerMask, tool, particles);
                 raycastAnterior = false;
@@ -141,8 +136,8 @@ public class Painter : MonoBehaviour
 
     private void disableActionTool(int layerMask, GameObject tool, ParticleSystem particles)
     {
-        checkLayer(layerMask, false);
-        stopSound(tool);
+        //checkLayer(layerMask, false);
+        //stopSound(tool);
         resetInterpolation();
         if (particles != null)
             desligarParticulas(particles);
@@ -159,36 +154,20 @@ public class Painter : MonoBehaviour
         return direction.y >= angle;
     }
 
-    private void checkLayer(int layer, bool state)
-    {
-        if (layer == 1 << LayerMask.NameToLayer("wood") 
-            || layer == 1 << LayerMask.NameToLayer("paper")
-            || layer == 1 << LayerMask.NameToLayer("newArt"))
-            verifSoundWood = state;
-        else
-            verifSoundGlass = state;
-    }
+    //private void checkLayer(int layer, bool state)
+    //{
+    //    if (layer == 1 << LayerMask.NameToLayer("wood") 
+    //        || layer == 1 << LayerMask.NameToLayer("paper")
+    //        || layer == 1 << LayerMask.NameToLayer("newArt"))
+    //        verifSoundWood = state;
+    //    else
+    //        verifSoundGlass = state;
+    //}
 
-    public void setVerifSound(bool value)
-    {
-        verifSound = value;
-    }
-
-    public void initSound(GameObject ferramenta)
-    {
-        if (verifSound){
-            ferramenta.gameObject.GetComponent<AudioSource>().Play();
-            verifSound = false;
-        }
-    }
-
-    public void stopSound(GameObject ferramenta)
-    {
-        if (ferramenta.gameObject.GetComponent<AudioSource>().isPlaying && !verifSoundWood && !verifSoundGlass){
-            ferramenta.gameObject.GetComponent<AudioSource>().Stop();
-            verifSound = true;
-        }
-    }
+    //public void setVerifSound(bool value)
+    //{
+    //    verifSound = value;
+    //}
 
     private Vector3 getPointerPosition(GameObject tool)
     {

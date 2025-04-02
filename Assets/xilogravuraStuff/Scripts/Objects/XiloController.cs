@@ -83,24 +83,28 @@ public class XiloController : InteractiveObject
         int layerMask = 1 << LayerMask.NameToLayer("wood");
         RenderTexture mask = null;
         bool interpolate = false;
+        GameObject tool = null;
 
         if ((hit = painter.CheckDraw(lapisDeRascunho, layerMask, true, isSculped, null)) != null)
         {
             mask = textureDictionary["SketchMask"];
             painter.SetBrushPreset(Brush.HardCircle);
             marcarEtapa(ref isSketched);
+            tool = lapisDeRascunho;
             interpolate = true;
         } else if ((hit = painter.CheckDraw(goiva, layerMask, isSketched, isSanded, lascasDeMadeira)) != null)
         {
             mask = textureDictionary["SculptMask"];
             painter.SetBrushPreset(Brush.HardSquare);
             marcarEtapa(ref isSculped);
+            tool = goiva;
         }
         else if ((hit = painter.CheckDraw(lixa, layerMask, isSculped, isPaint, poDeMadeira)) != null)
         {
             mask = textureDictionary["SandpaperMask"];
             painter.SetBrushPreset(Brush.SoftSquare);
             marcarEtapa(ref isSanded);
+            tool = lixa;
         }
         else if (roloDeTinta.GetComponent<InkRollerController>().isInkEnable() &&
                 (hit = painter.CheckDraw(roloDeTinta, layerMask, isSanded, paperController.isPrinted(), null)) != null)
@@ -108,6 +112,7 @@ public class XiloController : InteractiveObject
             mask = textureDictionary["PaintMask"];
             painter.SetBrushPreset(Brush.SoftSquare);
             marcarEtapa(ref isPaint);
+            tool = roloDeTinta;
         }
 
         if (hit != null){
@@ -118,7 +123,10 @@ public class XiloController : InteractiveObject
             }
 
             if (mask != null && validHit.collider != null)
+            {
                 painter.PaintMask(mask, validHit, interpolate);
+                tool.GetComponent<ToolUtils>().initSound();
+            }
         }
     }
 

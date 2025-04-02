@@ -53,18 +53,25 @@ public class GlassController : InteractiveObject
     public void Draw()
     {
         int layerMask = 1 << LayerMask.NameToLayer("glass");
+        GameObject tool = null;
 
-        if ((hit = painter.CheckDraw(tinta, layerMask, xiloController.getSanded(), false, tintaDerramada)) != null) {
+        if ((hit = painter.CheckDraw(tinta, layerMask, xiloController.getSanded(), false, tintaDerramada)) != null)
+        {
             painter.SetBrushPreset(Brush.Ink);
             isInkEnable = true;
+            tool = tinta;
         }
         else
         if (painter.CheckDraw(roloDeTinta, layerMask, isInkEnable, false, null) != null)
+        {
             roloDeTinta.GetComponent<InkRollerController>().enableInk();
+            tool = roloDeTinta;
+        }
 
         if (hit != null) {
             RaycastHit validHit = hit.Value;
             painter.PaintMask(textureDictionary["InkMask"], validHit, false);
+            tool.GetComponent<ToolUtils>().initSound();
             if (validHit.collider == null || (painter.mode.mode == Mode.VR && grabController.isToolNull()))
                 painter.desligarParticulas(tintaDerramada);
         }
