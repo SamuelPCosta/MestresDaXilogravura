@@ -38,7 +38,10 @@ def makePreviewFrame(frame, target_height=240):
 
 try:
     print("############## OpenCV Started ##############")
+    TARGET_FPS = 10  # Define a taxa desejada
+    FRAME_TIME = 1.0 / TARGET_FPS  # Tempo entre frames
     while True:
+        start_time = time.time()
         ret, frame = cap.read()
         if not ret:
             print("Error on capture frame")
@@ -81,12 +84,13 @@ try:
                 center_y = int(np.mean(first_corner[:, 1]))
 
                 trail.append((center_x, center_y))
-                if len(trail) > 8:
+                if len(trail) > 10:
                     trail.pop(0)
 
                 frameTrail = frame.copy()
+                frameTrail = (frameTrail * 0.4).astype("uint8")
                 for i in range(1, len(trail)):
-                    cv2.line(frameTrail, trail[i - 1], trail[i], (0, 255, 0), 15)
+                    cv2.line(frameTrail, trail[i - 1], trail[i], (0, 255, 0), 10)
                     
                 cv2.aruco.drawDetectedMarkers(frame, [corners[0]], np.array([[first_id]]))
                 cv2.drawFrameAxes(frame, camera_matrix, dist_coeffs, rvec, tvec, 0.03)
@@ -114,7 +118,9 @@ try:
         json_data = json.dumps(data)
         sock.sendto(json_data.encode(), (udp_ip, udp_port))
 
-        time.sleep(0.1)
+        elapsed_time = time.time() - start_time
+        sleep_time = max(0, FRAME_TIME - elapsed_time)
+        time.sleep(sleep_time)
 
 except Exception as e:
     print(f"Error: {e}")

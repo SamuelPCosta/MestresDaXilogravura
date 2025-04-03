@@ -21,6 +21,7 @@ public class MenuController : MonoBehaviour
     private TextMeshProUGUI textTutorial;
 
     private GameObject canva;
+    public GameObject undoMenu;
     public GameObject posicionarFolhaMenu;
     public GameObject resultadoMenu;
     public GameObject restartMenu;
@@ -80,6 +81,7 @@ public class MenuController : MonoBehaviour
         resultadoButton = resultadoMenu.GetComponentInChildren<Button>();
         restartButton = restartMenu.GetComponentInChildren<Button>();
 
+        undoMenu.SetActive(false);
         posicionarFolhaMenu.SetActive(false);
         resultadoMenu.SetActive(false);
         restartMenu.SetActive(false);
@@ -216,6 +218,7 @@ public class MenuController : MonoBehaviour
     private void StartExp()
     {
         //verifStart = true;
+        undoMenu.SetActive(true);
         canva = GameObject.Find("Menu");
         if (canva != null)
         {
@@ -321,6 +324,7 @@ public class MenuController : MonoBehaviour
         switchImage = false;
         artAutoral = false;
 
+        undoMenu.SetActive(false);
         //firstInstruction?.SetActive(true);
     }
 

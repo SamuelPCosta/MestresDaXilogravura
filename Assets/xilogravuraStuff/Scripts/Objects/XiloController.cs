@@ -91,7 +91,7 @@ public class XiloController : InteractiveObject
             painter.SetBrushPreset(Brush.HardCircle);
             marcarEtapa(ref isSketched);
             tool = lapisDeRascunho;
-            interpolate = true;
+            //interpolate = true;
         } else if ((hit = painter.CheckDraw(goiva, layerMask, isSketched, isSanded, lascasDeMadeira)) != null)
         {
             mask = textureDictionary["SculptMask"];

@@ -18,11 +18,12 @@ public class UDPReceiver : MonoBehaviour
     public Transform pointer;
     public Transform[] tools;
     public Transform[] boardTools;
+    public GameObject ledIndicator;
     private Transform currentTool;
     private Queue<System.Action> mainThreadActions = new Queue<System.Action>();
 
     private float _timer = 0f;
-    private const float TargetFPS = 20f; //20 verificacoes dos dados por segundo
+    private const float TargetFPS = 16f; //16 verificacoes dos dados por segundo (antes 20)
     private const float FrameTime = 1f / TargetFPS;
 
     private const int POINTER_ID = 10;
@@ -35,6 +36,7 @@ public class UDPReceiver : MonoBehaviour
         receiveThread.IsBackground = true;
         receiveThread.Start();
         _receivedTexture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+        ledIndicator.SetActive(false);
     }
 
     void Update()
@@ -74,6 +76,7 @@ public class UDPReceiver : MonoBehaviour
         }
     }
 
+    private bool resetCursor = false;
     private void checkTool(UDPData jsonData)
     {
         if (jsonData.id == POINTER_ID)
@@ -87,6 +90,11 @@ public class UDPReceiver : MonoBehaviour
 
                 currentTool = pointer;
                 isCursor = true;
+                if (!resetCursor)
+                {
+                    resetCursor = true;
+                    pointer.GetComponent<TrackingBtnController>().resetClick();
+                }
                 UpdateTransform(jsonData, true);
             });
         }
@@ -117,6 +125,7 @@ public class UDPReceiver : MonoBehaviour
                 currentTool = null;
                 mode.resetTool();
                 stabilize = false;
+                resetCursor = false;
             });
         }
     }
@@ -130,6 +139,7 @@ public class UDPReceiver : MonoBehaviour
                     _receivedTexture.Reinitialize(2, 2);
                 _receivedTexture.LoadImage(imageBytes);
                 Graphics.Blit(_receivedTexture, displayTarget);
+                ledIndicator.SetActive(ledStatus);
             });
         }
     }
@@ -156,24 +166,16 @@ public class UDPReceiver : MonoBehaviour
         float lerpFactor = 0.85f;
 
         Vector3 targetPosition = new Vector3(
-            data.position[0],
-            data.position[1],
-            !Movement2D ? data.position[2] : currentTool.localPosition.z
-        ) * influency;
-
+            data.position[0] * influency,
+            data.position[1] * influency,
+            !Movement2D ? data.position[2] * (influency/2) : 5f
+        );
         
         Vector3 futurePositon = Vector3.Lerp(
             currentTool.localPosition,
             targetPosition,
             lerpFactor
         );
-        float distance = Vector3.Distance(futurePositon, currentTool.localPosition);
-
-        //float distanceLimit = .32f; //magic number
-        //if (distance > distanceLimit)
-        //    return;
-
-        stabilize = true;
 
         currentTool.localPosition = futurePositon;
 

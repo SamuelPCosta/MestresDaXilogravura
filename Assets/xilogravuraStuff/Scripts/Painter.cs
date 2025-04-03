@@ -115,8 +115,6 @@ public class Painter : MonoBehaviour
                 if (tool.name.Equals("goiva") && !checkAngle(hit, 0.85f))
                     return null;
                 
-                //checkLayer(layerMask, true);
-                //initSound(tool);
                 if(particles != null)
                     instanciarParticulas(particles, hit.point);
 
@@ -136,8 +134,6 @@ public class Painter : MonoBehaviour
 
     private void disableActionTool(int layerMask, GameObject tool, ParticleSystem particles)
     {
-        //checkLayer(layerMask, false);
-        //stopSound(tool);
         resetInterpolation();
         if (particles != null)
             desligarParticulas(particles);
@@ -153,21 +149,6 @@ public class Painter : MonoBehaviour
         lastHitAngle = hit.textureCoord;
         return direction.y >= angle;
     }
-
-    //private void checkLayer(int layer, bool state)
-    //{
-    //    if (layer == 1 << LayerMask.NameToLayer("wood") 
-    //        || layer == 1 << LayerMask.NameToLayer("paper")
-    //        || layer == 1 << LayerMask.NameToLayer("newArt"))
-    //        verifSoundWood = state;
-    //    else
-    //        verifSoundGlass = state;
-    //}
-
-    //public void setVerifSound(bool value)
-    //{
-    //    verifSound = value;
-    //}
 
     private Vector3 getPointerPosition(GameObject tool)
     {
@@ -205,31 +186,35 @@ public class Painter : MonoBehaviour
 
     public Vector2 Interpolation(RenderTexture mask, RenderTexture temp, RaycastHit hit, Vector2 lastHitCoord)
     {
+        if (lastHitCoord == Vector2.zero)
+            return hit.textureCoord;
+
         float strokeSmoothingInterval = 0.01f;
         float distance = Vector2.Distance(lastHitCoord, hit.textureCoord);
+        int numPoints = Mathf.Clamp((int)(distance / strokeSmoothingInterval), 2, 40);
 
-        int numPoints = Mathf.Min((int) ((distance/strokeSmoothingInterval)*2.2f), 40);
+        Vector2 previousPoint = lastHitCoord;
+        for (int i = 1; i <= numPoints; i++)
+        {
+            float t = (float)i / numPoints;
+            Vector2 pointB = Vector2.Lerp(lastHitCoord, hit.textureCoord, 0.5f);
+            Vector2 interpolatedPoint =
+                (1 - t) * (1 - t) * lastHitCoord +
+                2 * (1 - t) * t * pointB +
+                t * t * hit.textureCoord;
 
-        for (int i = 0; i < numPoints; i++){
-            if (lastHitCoord == Vector2.zero)
-                break;
-
-            Vector2 direction = hit.textureCoord - lastHitCoord;
-
-            float totalDistance = direction.magnitude;
-            direction.Normalize();
-
-            Vector2 pointC = lastHitCoord + direction * i/2.2f * Mathf.Clamp(strokeSmoothingInterval, 0f, totalDistance);
-
-            //drawMaterial.SetVector("_Color", Color.yellow);
-            drawMaterial.SetVector("_Coordinates", new Vector4(pointC.x, pointC.y, 0, 0));
+            drawMaterial.SetVector("_Color", Color.yellow);
+            drawMaterial.SetVector("_Coordinates", new Vector4(interpolatedPoint.x, interpolatedPoint.y, 0, 0));
             temp = RenderTexture.GetTemporary(mask.width, mask.height, 0, RenderTextureFormat.ARGBFloat);
             Graphics.Blit(mask, temp);
             Graphics.Blit(temp, mask, drawMaterial);
             RenderTexture.ReleaseTemporary(temp);
+
+            previousPoint = interpolatedPoint;
         }
         return hit.textureCoord;
     }
+
 
     public Vector3 isToolInteraction(GameObject ferramenta)
     {

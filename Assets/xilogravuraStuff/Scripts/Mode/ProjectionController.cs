@@ -12,8 +12,6 @@ public class ProjectionController : MonoBehaviour
 
     [Header("Componentes")]
     public Transform virtualCamera;
-    public Transform TrackCameraOffset;
-    public Transform ARCamera;
     //public Transform Tools;
 
     private bool setVideo = false;
@@ -21,15 +19,5 @@ public class ProjectionController : MonoBehaviour
     public void Start()
     {
         float distancia = Mathf.Abs(virtualCamera.localPosition.z) - distaciaDaCamera;
-        TrackCameraOffset.localPosition = new Vector3(TrackCameraOffset.localPosition.x, AlturaDaCamera, 0);
-    }
-
-    public void Update()
-    {
-        if (!setVideo && ARCamera.childCount > 0){
-            Transform firstChild = ARCamera.GetChild(0);
-            firstChild.gameObject.layer = LayerMask.NameToLayer("video");
-            setVideo = true;
-        }
     }
 }
