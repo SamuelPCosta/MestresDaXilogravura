@@ -51,7 +51,7 @@ try:
 
         # Deteccao do LED
         _, thresh = cv2.threshold(gray, threshold_brilho, 255, cv2.THRESH_BINARY)
-        led_aceso = np.sum(thresh == 255) > 500
+        led_aceso = np.sum(thresh == 255) > 600
         
         # Processa apenas o PRIMEIRO marcador (se existir)
         corners, ids, _ = detector.detectMarkers(gray)
