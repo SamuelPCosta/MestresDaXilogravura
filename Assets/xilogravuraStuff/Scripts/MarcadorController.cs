@@ -88,17 +88,17 @@ public class MarcadorController : MonoBehaviour
         MeshRenderer renderer = ganchos[index].transform.GetChild(0).GetComponent<MeshRenderer>();
         currentTool = renderer;
         Material[] currentMaterials = renderer.materials;
-        if (currentMaterials.Length > 1)
-            return;
-        Material[] newMaterials = new Material[currentMaterials.Length + 1];
 
+        foreach (Material mat in currentMaterials)
+            if (mat == outline)
+                return;
+
+        Material[] newMaterials = new Material[currentMaterials.Length + 1];
         for (int i = 0; i < currentMaterials.Length; i++)
             newMaterials[i] = currentMaterials[i];
 
         newMaterials[newMaterials.Length - 1] = outline;
-
         renderer.materials = newMaterials;
-        //marcador.transform.GetChild(1).GetComponent<MeshRenderer>()materials(outline);
     }
 
     private void refreshIcon(int index) {
