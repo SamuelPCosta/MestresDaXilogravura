@@ -72,9 +72,12 @@ public class MenuController : MonoBehaviour
     public GameObject firstInstruction;
     public AudioSource audioSource;
 
+    private Sprite spriteTexture;
+
     // Start is called before the first frame update
     void Start()
     {
+        spriteTexture = Sprite.Create(desenhos[indice].texture, cropRect, new Vector2(0.5f, 0.5f));
         drawingCurrent = GameObject.Find("Desenho");
         
         posicionarFolhaButton = posicionarFolhaMenu.GetComponentInChildren<Button>();
@@ -149,7 +152,6 @@ public class MenuController : MonoBehaviour
 
         if (!verifStart && (indice != indiceAnterior || !switchImage))
         {
-            Sprite spriteTexture = Sprite.Create(desenhos[indice].texture, cropRect, new Vector2(0.5f, 0.5f));
             drawingCurrent.GetComponent<Image>().sprite = spriteTexture;
 
             indiceAnterior = indice;
