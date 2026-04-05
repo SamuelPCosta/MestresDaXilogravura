@@ -7,7 +7,7 @@ import base64
 
 threshold_brilho = 250
 udp_ip = "127.0.0.1"
-udp_port = 8764
+udp_port = 8763
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 

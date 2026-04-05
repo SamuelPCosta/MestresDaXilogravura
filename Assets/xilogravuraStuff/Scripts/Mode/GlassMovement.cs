@@ -19,7 +19,7 @@ public class GlassMovement : MonoBehaviour
     {
         Transform tool = projectionMode.getTool();
         float startPos = transform.localPosition.y;
-        if (tool != null && tool.name.Equals("tinta") && !isGlass && xiloController.getSanded())
+        if (tool != null && tool.name.Equals("tinta") && !isGlass && xiloController.isSanded)
             StartCoroutine(MoveToPosition(startPos, .85f));
         if (inkRollerController.isInkEnable() && isGlass)
             StartCoroutine(MoveToPosition(startPos, initialPosition));

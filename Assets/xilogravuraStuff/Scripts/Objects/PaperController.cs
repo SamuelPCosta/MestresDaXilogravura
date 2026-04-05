@@ -77,7 +77,7 @@ public class PaperController : InteractiveObject
             validHit.point = new Vector3(-validHit.point.x, validHit.point.y, validHit.point.z); //TESTE INVTERTER X
 
             painter.PaintMask(textureDictionary["PrintMask"], validHit, false);
-            ferramenta.GetComponent<ToolUtils>().initSound();
+            ferramenta.GetComponent<Tool>().initSound();
             //if (validHit.collider == null || (painter.mode.mode == Mode.VR && grabController.isToolNull()))
             //    painter.stopSound(ferramenta.gameObject);
         }

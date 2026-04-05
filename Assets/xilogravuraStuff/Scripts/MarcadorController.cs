@@ -62,11 +62,11 @@ public class MarcadorController : MonoBehaviour
         //int ganchoIndex = 0;
 
         int index = paperController.isSheetPositioned() ? 5 :
-                    xiloController.getPaint() ? 5 :
-                    glassController.getInkEnable() ? 4 :
-                    xiloController.getSanded() ? 3 :
-                    xiloController.getSculped() ? 2 :
-                    xiloController.getSketched() ? 1 : 0;
+            xiloController.isPaint ? 5 :
+            glassController.getInkEnable() ? 4 :
+            xiloController.isSanded ? 3 :
+            xiloController.isSculped ? 2 :
+            xiloController.isSketched ? 1 : 0;
 
         tutorialText = Instructions[index];
 

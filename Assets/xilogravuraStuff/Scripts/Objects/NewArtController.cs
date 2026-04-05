@@ -37,7 +37,7 @@ public class NewArtController : InteractiveObject
 
     public void ReturnProcess()
     {
-        if(!matriz.GetComponent<XiloController>().getSketched())
+        if(!matriz.GetComponent<XiloController>().isSketched)
         {
             Graphics.SetRenderTarget(textureDictionary["SketchMask"]);
             GL.Clear(true, true, Color.black);

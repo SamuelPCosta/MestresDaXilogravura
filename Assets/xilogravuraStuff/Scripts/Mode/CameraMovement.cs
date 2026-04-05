@@ -21,7 +21,7 @@ public class CameraMovement : MonoBehaviour
     {
         Transform tool = projectionMode.getTool();
         float startPos = transform.position.y;
-        if (tool != null && tool.name.Equals("tinta") && !cameraDown && xiloController.getSanded())
+        if (tool != null && tool.name.Equals("tinta") && !cameraDown && xiloController.isSanded)
             StartCoroutine(MoveToPosition(startPos, .98f));
         if(inkRollerController.isInkEnable() && cameraDown)
             StartCoroutine(MoveToPosition(startPos, initialPosition));

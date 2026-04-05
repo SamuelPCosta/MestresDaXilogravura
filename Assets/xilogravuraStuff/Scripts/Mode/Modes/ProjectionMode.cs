@@ -43,8 +43,8 @@ public class ProjectionMode : ExperienceMode
 
     public void resetTool()
     {
-        if(tool != null && tool.GetComponent<ToolUtils>() != null)
-            tool.GetComponent<ToolUtils>().stopSound();
+        if(tool != null && tool.GetComponent<Tool>() != null)
+            tool.GetComponent<Tool>().stopSound();
         tool = null;
     }
 

@@ -270,7 +270,7 @@ public class Painter : MonoBehaviour
         }
         else
         {
-            Debug.LogError("Objeto Contador do tamanho do pincel ou slider n�o encontrado!!");
+            Debug.LogError("Objeto Contador do tamanho do pincel ou slider nao encontrado!!");
         }
     }
 }

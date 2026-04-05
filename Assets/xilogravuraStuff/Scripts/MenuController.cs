@@ -113,27 +113,30 @@ public class MenuController : MonoBehaviour
             art.GetComponent<NewArtController>().ReturnProcess();
         }
 
-        if (matriz.GetComponent<XiloController>().getPaint())
+        var xilo = matriz.GetComponent<XiloController>();
+
+        if (xilo.isPaint)
         {
-            matriz.GetComponent<XiloController>().ResetOneTexture("PaintMask");
-            matriz.GetComponent<XiloController>().setPaint(false);
+            xilo.ResetOneTexture("PaintMask");
+            xilo.isPaint = false;
         }
-        else if (matriz.GetComponent<XiloController>().getSanded())
+        else if (xilo.isSanded)
         {
-            matriz.GetComponent<XiloController>().ResetOneTexture("SandMask");
-            matriz.GetComponent<XiloController>().setSanded(false);
+            xilo.ResetOneTexture("SandMask");
+            xilo.isSanded = false;
         }
-        else if (matriz.GetComponent<XiloController>().getSculped())
+        else if (xilo.isSculped)
         {
-            matriz.GetComponent<XiloController>().ResetOneTexture("SculptMask");
-            matriz.GetComponent<XiloController>().SetSculped(false);
+            xilo.ResetOneTexture("SculptMask");
+            xilo.isSculped = false;
         }
-        else if (matriz.GetComponent<XiloController>().getSketched())
+        else if (xilo.isSketched)
         {
-            matriz.GetComponent<XiloController>().ResetOneTexture("SketchMask");
-            matriz.GetComponent<XiloController>().SetSketched(false);
-        }  
+            xilo.ResetOneTexture("SketchMask");
+            xilo.isSketched = false;
+        }
     }
+
 
     // Update is called once per frame
     void Update()
@@ -258,10 +261,16 @@ public class MenuController : MonoBehaviour
             Sprite spriteAtual = desenhos[indice];
             if (spriteAtual != null)
             {
-                Texture2D desenho = new Texture2D((int)spriteAtual.rect.width, (int)spriteAtual.rect.height);
+                int width = (int)(spriteAtual.rect.width * 0.65f);
+                int height = (int)(spriteAtual.rect.height * 0.65f);
 
-                desenho.SetPixels(spriteAtual.texture.GetPixels((int)spriteAtual.rect.x, (int)spriteAtual.rect.y,
-                    (int)spriteAtual.rect.width, (int)spriteAtual.rect.height));
+                int startX = (int)(spriteAtual.rect.x + (spriteAtual.rect.width - width) / 2);
+                int startY = (int)(spriteAtual.rect.y + (spriteAtual.rect.height - height) / 2); //CORRIGIR ESSA PORRA AQUI
+
+                Texture2D desenho = new Texture2D(width, height);
+
+                desenho.SetPixels(spriteAtual.texture.GetPixels(startX, startY, width, height));
+
 
                 desenho.Apply();
 
@@ -276,6 +285,7 @@ public class MenuController : MonoBehaviour
         matriz.GetComponent<XiloController>().setTextures();
         Material xiloMaterial = matriz.GetComponent<MeshRenderer>().materials[0];
         xiloMaterial.SetTexture("SketchTexture", desenho);
+
 
         Material paperMaterial = papel.GetComponent<MeshRenderer>().materials[0];
         paperMaterial.SetTexture("SketchTexture", desenho);

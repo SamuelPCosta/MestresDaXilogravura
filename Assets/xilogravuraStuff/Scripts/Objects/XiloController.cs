@@ -10,7 +10,6 @@ public class XiloController : InteractiveObject
 {
     private RaycastHit? hit;
 
-    public Painter painter;
     public GrabController grabController;
     public PaperController paperController;
 
@@ -29,22 +28,14 @@ public class XiloController : InteractiveObject
 
     public bool isStart = false;
 
-    private bool isSketched = false;
-    private bool isSculped = false;
-    private bool isSanded = false;
-    private bool isPaint = false;
+    public bool isSketched { get; set; } = false;
+    public bool isSculped { get; set; } = false;
+    public bool isSanded { get; set; } = false;
+    public bool isPaint { get; set; } = false;
 
     private Dictionary<string, RenderTexture> textureDictionary = new Dictionary<string, RenderTexture>();
     private string[] textureNames = { "SketchMask", "SculptMask", "SandpaperMask", "PaintMask", "PrintMaskOld" };
 
-    private void Awake()
-    {
-        //for (int i = 0; i < objectNames.Count; i++)
-        //{
-        //    objectNames[i]?.SetActive(false);
-        //    //Debug.Log(objectNames[i].name);
-        //}
-    }
     void Start()
     {
         currentMaterial = GetComponent<MeshRenderer>().materials[0];
@@ -78,82 +69,9 @@ public class XiloController : InteractiveObject
             currentMaterial.SetTexture(textureNames[i], textureDictionary[textureNames[i]]);
         }
     }
-
-    public void Draw(){
-        int layerMask = 1 << LayerMask.NameToLayer("wood");
-        RenderTexture mask = null;
-        bool interpolate = false;
-        GameObject tool = null;
-
-        if ((hit = painter.CheckDraw(lapisDeRascunho, layerMask, true, isSculped, null)) != null)
-        {
-            mask = textureDictionary["SketchMask"];
-            painter.SetBrushPreset(Brush.HardCircle);
-            marcarEtapa(ref isSketched);
-            tool = lapisDeRascunho;
-            //interpolate = true;
-        } else if ((hit = painter.CheckDraw(goiva, layerMask, isSketched, isSanded, lascasDeMadeira)) != null)
-        {
-            mask = textureDictionary["SculptMask"];
-            painter.SetBrushPreset(Brush.HardSquare);
-            marcarEtapa(ref isSculped);
-            tool = goiva;
-        }
-        else if ((hit = painter.CheckDraw(lixa, layerMask, isSculped, isPaint, poDeMadeira)) != null)
-        {
-            mask = textureDictionary["SandpaperMask"];
-            painter.SetBrushPreset(Brush.SoftSquare);
-            marcarEtapa(ref isSanded);
-            tool = lixa;
-        }
-        else if (roloDeTinta.GetComponent<InkRollerController>().isInkEnable() &&
-                (hit = painter.CheckDraw(roloDeTinta, layerMask, isSanded, paperController.isPrinted(), null)) != null)
-        {
-            mask = textureDictionary["PaintMask"];
-            painter.SetBrushPreset(Brush.SoftSquare);
-            marcarEtapa(ref isPaint);
-            tool = roloDeTinta;
-        }
-
-        if (hit != null){
-            RaycastHit validHit = hit.Value;
-            if (validHit.collider == null || (painter.mode.mode == Mode.VR && grabController.isToolNull())){
-                painter.desligarParticulas(lascasDeMadeira);
-                painter.desligarParticulas(poDeMadeira);
-            }
-
-            if (mask != null && validHit.collider != null)
-            {
-                painter.PaintMask(mask, validHit, interpolate);
-                tool.GetComponent<ToolUtils>().initSound();
-            }
-        }
-    }
-
     public void enableProcess()
     {
         isStart = true;
-    }
-
-    void Update()
-    {
-        if (isStart)
-        {
-            Draw();
-        }
-        else
-        {
-            painter.desligarParticulas(lascasDeMadeira);
-            painter.desligarParticulas(poDeMadeira);
-        }
-    }
-
-    void marcarEtapa(ref bool etapa)
-    {
-        if (!etapa)
-        {
-            etapa = true;
-        }
     }
 
     public bool isPainted()
@@ -161,58 +79,22 @@ public class XiloController : InteractiveObject
         return isPaint;
     }
 
-    public Texture getTexture(string chave)
+    public Texture getTexture(string key)
     {
-        return textureDictionary[chave];
+        return textureDictionary[key];
     }
 
     public void resetValues()
     {
         isStart = false;
-
         isSketched = false;
         isSculped = false;
         isSanded = false;
         isPaint = false;
     }
 
-    public bool getSketched()
-    {
-        return isSketched;
-    }
-
-    public void SetSketched(bool state)
-    {
-        isSketched = state;
-    }
-
-    public bool getSculped()
-    {
-        return isSculped;
-    }
-
-    public void SetSculped(bool state)
-    {
-        isSculped = state;
-    }
-
-    public bool getSanded()
-    {
-        return isSanded;
-    }
-
-    public void setSanded(bool state)
-    {
-        isSanded = state;
-    }
-
-    public bool getPaint()
-    {
-        return isPaint;
-    }
-
-    public void setPaint(bool state)
-    {
-        isPaint = state;
-    }
+    public void SetSketched(bool state) => isSketched = state;
+    public void SetSculped(bool state) => isSculped = state;
+    public void SetSanded(bool state) => isSanded = state;
+    public void SetPaint(bool state) => isPaint = state;
 }
