@@ -1,27 +1,20 @@
 ﻿using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
-/// <summary>
-/// An interactable lever that snaps into an on or off position by a direct interactor
-/// </summary>
 public class XRLever : XRBaseInteractable
 {
-    [Tooltip("The object that's grabbed and manipulated")]
     public Transform handle = null;
-
-    [Tooltip("The initial value of the lever")]
     public bool defaultValue = false;
 
-    // When the lever is activated
     public UnityEvent OnLeverActivate = new UnityEvent();
-
-    // When the lever is deactivated
     public UnityEvent OnLeverDeactivate = new UnityEvent();
 
     public bool Value { get; private set; } = false;
 
-    private XRBaseInteractor selectInteractor = null;
+    private IXRSelectInteractor selectInteractor = null;
 
     private void Start()
     {
@@ -47,7 +40,7 @@ public class XRLever : XRBaseInteractable
 
     private void StartGrab(SelectEnterEventArgs eventArgs)
     {
-        selectInteractor = eventArgs.interactor;
+        selectInteractor = eventArgs.interactorObject;
     }
 
     private void EndGrab(SelectExitEventArgs eventArgs)
@@ -82,7 +75,7 @@ public class XRLever : XRBaseInteractable
 
     private void ApplyValue(SelectExitEventArgs eventArgs)
     {
-        XRBaseInteractor interactor = eventArgs.interactor;
+        IXRSelectInteractor interactor = eventArgs.interactorObject;
         bool isOn = InOnPosition(interactor.transform.position);
 
         FindSnapDirection(isOn);

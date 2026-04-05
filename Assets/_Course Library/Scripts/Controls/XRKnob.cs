@@ -2,33 +2,24 @@
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
-/// <summary>
-/// An interactable knob that follows the rotation of the interactor
-/// </summary>
 public class XRKnob : XRBaseInteractable
 {
-    [Tooltip("The transform of the visual component of the knob")]
     public Transform knobTransform = null;
 
-    [Tooltip("The minimum range the knob can rotate")]
     [Range(-180, 0)] public float minimum = -90.0f;
-
-    [Tooltip("The maximum range the knob can rotate")]
     [Range(0, 180)] public float maximum = 90.0f;
-
-    [Tooltip("The initial value of the knob")]
     [Range(0, 1)] public float defaultValue = 0.0f;
 
     [Serializable] public class ValueChangeEvent : UnityEvent<float> { }
-
-    // When the knobs's value changes
     public ValueChangeEvent OnValueChange = new ValueChangeEvent();
 
     public float Value { get; private set; } = 0.0f;
     public float Angle { get; private set; } = 0.0f;
 
-    private XRBaseInteractor selectInteractor = null;
+    private IXRSelectInteractor selectInteractor = null;
     private Quaternion selectRotation = Quaternion.identity;
 
     private void Start()
@@ -54,7 +45,7 @@ public class XRKnob : XRBaseInteractable
 
     private void StartTurn(SelectEnterEventArgs eventArgs)
     {
-        selectInteractor = eventArgs.interactor;
+        selectInteractor = eventArgs.interactorObject;
         selectRotation = selectInteractor.transform.rotation;
     }
 
@@ -70,7 +61,7 @@ public class XRKnob : XRBaseInteractable
 
         if (updatePhase == XRInteractionUpdateOrder.UpdatePhase.Dynamic)
         {
-            if (selectInteractor)
+            if (selectInteractor != null)
             {
                 Angle = FindRotationValue();
                 float finalRotation = ApplyRotation(Angle);
@@ -94,18 +85,15 @@ public class XRKnob : XRBaseInteractable
         newRotation *= knobTransform.localRotation;
 
         Vector3 eulerRotation = newRotation.eulerAngles;
-        eulerRotation.y = ClampAngle(eulerRotation.y);
+
+        float yAngle = eulerRotation.y;
+        if (yAngle > 180) yAngle -= 360;
+
+        yAngle = Mathf.Clamp(yAngle, minimum, maximum);
+        eulerRotation.y = yAngle;
 
         knobTransform.localEulerAngles = eulerRotation;
-        return eulerRotation.y;
-    }
-
-    private float ClampAngle(float angle)
-    {
-        if (angle > 180)
-            angle -= 360;
-
-        return (Mathf.Clamp(angle, minimum, maximum));
+        return yAngle;
     }
 
     private void SetValue(float rotation)

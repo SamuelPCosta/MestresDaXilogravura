@@ -2,32 +2,22 @@
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
-/// <summary>
-/// An interactable that lets the push/pull a handle a long a linear track by a direct interactor
-/// </summary>
 public class XRSlider : XRBaseInteractable
 {
-    [Tooltip("The object that's grabbed and manipulated")]
     public Transform handle = null;
-
-    [Tooltip("The start point of the track")]
     public Transform start = null;
-
-    [Tooltip("The end point of the track")]
     public Transform end = null;
-
-    [Tooltip("The initial value of the slider")]
     [Range(0, 1)] public float defaultValue = 0.0f;
 
     [Serializable] public class ValueChangeEvent : UnityEvent<float> { }
-
-    // Whenever the slider's value changes
     public ValueChangeEvent OnValueChange = new ValueChangeEvent();
 
     public float Value { get; private set; } = 0.0f;
 
-    private XRBaseInteractor selectInteractor = null;
+    private IXRSelectInteractor selectInteractor = null;
     private Vector3 selectPosition = Vector3.zero;
     private float startingValue = 0.0f;
 
@@ -53,7 +43,7 @@ public class XRSlider : XRBaseInteractable
 
     private void StartGrab(SelectEnterEventArgs eventArgs)
     {
-        selectInteractor = eventArgs.interactor;
+        selectInteractor = eventArgs.interactorObject;
         selectPosition = selectInteractor.transform.position;
         startingValue = Value;
     }
@@ -69,9 +59,9 @@ public class XRSlider : XRBaseInteractable
     {
         base.ProcessInteractable(updatePhase);
 
-        if (isSelected)
+        if (updatePhase == XRInteractionUpdateOrder.UpdatePhase.Dynamic)
         {
-            if (updatePhase == XRInteractionUpdateOrder.UpdatePhase.Dynamic)
+            if (isSelected)
             {
                 Value = FindPullValue();
                 ApplyValue(Value);

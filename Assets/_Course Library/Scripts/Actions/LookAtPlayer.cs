@@ -18,6 +18,7 @@ public class LookAtPlayer : MonoBehaviour
     private GameObject cameraObject = null;
     private Vector3 originalRotation = Vector3.zero;
 
+    [System.Obsolete]
     private void Awake()
     {
         cameraObject = FindObjectOfType<XRRig>().cameraGameObject;
