@@ -56,8 +56,8 @@ public class PaperController : InteractiveObject
     public void Draw()
     {
         int layerMask = 1 << 12;
-        if(painter.mode.mode == Mode.PROJECTION && xilogravura.isPainted())
-            layerMask = 1 << 10;// CORRIGE O PROBLEMA DA COLHER NA PROJECAO
+        //if(xilogravura.isPainted())
+        //    layerMask = 1 << 10;// CORRIGE O PROBLEMA DA COLHER NA PROJECAO
         if ((hit = painter.CheckDraw(ferramenta, layerMask, true, resultado, null)) != null)
         {
             if (!setarTexturas)
@@ -74,9 +74,12 @@ public class PaperController : InteractiveObject
         if (hit != null)
         {
             RaycastHit validHit = hit.Value;
+            validHit.point = new Vector3(-validHit.point.x, validHit.point.y, validHit.point.z); //TESTE INVTERTER X
+
             painter.PaintMask(textureDictionary["PrintMask"], validHit, false);
-            if (validHit.collider == null || (painter.mode.mode == Mode.VR && grabController.isToolNull()))
-                painter.stopSound(ferramenta.gameObject);
+            ferramenta.GetComponent<Tool>().initSound();
+            //if (validHit.collider == null || (painter.mode.mode == Mode.VR && grabController.isToolNull()))
+            //    painter.stopSound(ferramenta.gameObject);
         }
     }
 

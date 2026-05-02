@@ -2,10 +2,9 @@
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.XR.Interaction.Toolkit.Interactors;
+using UnityEngine.XR.Interaction.Toolkit.Interactables;
 
-/// <summary>
-/// An interactable joystick that can move side to side, and forward and back by a direct interactor
-/// </summary>
 public class XRJoystick : XRBaseInteractable
 {
     public enum JoystickType
@@ -27,14 +26,11 @@ public class XRJoystick : XRBaseInteractable
 
     [Serializable] public class ValueChangeEvent : UnityEvent<float> { }
 
-    // When the joystick's x value changes
     public ValueChangeEvent OnXValueChange = new ValueChangeEvent();
-
-    // When the joystick's y value changes
     public ValueChangeEvent OnYValueChange = new ValueChangeEvent();
 
     public Vector2 Value { get; private set; } = Vector2.zero;
-    private XRBaseInteractor selectInteractor = null;
+    private IXRSelectInteractor selectInteractor = null;
 
     private Vector3 initialPosition = Vector3.zero;
 
@@ -57,7 +53,7 @@ public class XRJoystick : XRBaseInteractable
 
     private void StartGrab(SelectEnterEventArgs eventArgs)
     {
-        selectInteractor = eventArgs.interactor;
+        selectInteractor = eventArgs.interactorObject;
         initialPosition = ConvertToLocal(selectInteractor.transform.position);
     }
 
@@ -78,9 +74,9 @@ public class XRJoystick : XRBaseInteractable
     {
         base.ProcessInteractable(updatePhase);
 
-        if (isSelected)
+        if (updatePhase == XRInteractionUpdateOrder.UpdatePhase.Dynamic)
         {
-            if (updatePhase == XRInteractionUpdateOrder.UpdatePhase.Dynamic)
+            if (isSelected)
             {
                 Vector3 targetPosition = selectInteractor.transform.position;
                 Vector3 newRotation = FindJoystickRotation(targetPosition);
@@ -122,7 +118,7 @@ public class XRJoystick : XRBaseInteractable
     private float GetRotationDifference(float yRelative, float xRelative)
     {
         float difference = Mathf.Atan2(xRelative, yRelative) * Mathf.Rad2Deg;
-        difference = Mathf.Clamp(difference, minRotation, maxRotation);
+        difference = Mathf.Clamp(difference, (float)minRotation, (float)maxRotation);
         return difference;
     }
 
@@ -149,8 +145,8 @@ public class XRJoystick : XRBaseInteractable
 
     private float Normalize(float value)
     {
-        value = Mathf.InverseLerp(minRotation, maxRotation, value);
-        value = Mathf.Lerp(-1, 1, value);
+        value = Mathf.InverseLerp((float)minRotation, (float)maxRotation, value);
+        value = Mathf.Lerp(-1f, 1f, value);
         return value;
     }
 }

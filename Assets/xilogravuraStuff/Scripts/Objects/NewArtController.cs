@@ -21,8 +21,7 @@ public class NewArtController : InteractiveObject
 
     private bool isSketched = false;
 
-    [SerializeField]
-    private TouchController touch;
+    //[SerializeField] private TouchController touch;
 
     private Dictionary<string, RenderTexture> textureDictionary = new Dictionary<string, RenderTexture>();
     private string[] textureNames = { "SketchMask" };
@@ -37,11 +36,11 @@ public class NewArtController : InteractiveObject
 
     public void ReturnProcess()
     {
-        if(!matriz.GetComponent<XiloController>().getSketched())
-        {
-            Graphics.SetRenderTarget(textureDictionary["SketchMask"]);
-            GL.Clear(true, true, Color.black);
-        }
+        //if(!matriz.GetComponent<XiloController>().isSketched)
+        //{
+        //    Graphics.SetRenderTarget(textureDictionary["SketchMask"]);
+        //    GL.Clear(true, true, Color.black);
+        //}
     }
 
     public void resetTextures()
@@ -91,8 +90,8 @@ public class NewArtController : InteractiveObject
         {
             RaycastHit validHit = hit.Value;
             painter.PaintMask(textureDictionary["SketchMask"], validHit, true);
-            if (validHit.collider == null || (painter.mode.mode == Mode.VR && grabController.isToolNull()))
-                painter.stopSound(lapisDeRascunho.gameObject);
+            //if (validHit.collider == null || (painter.mode.mode == Mode.VR && grabController.isToolNull()))
+            //    painter.stopSound(lapisDeRascunho.gameObject);
         }
     }
 

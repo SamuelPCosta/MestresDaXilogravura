@@ -2,13 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
-using UnityEngine.XR.Interaction.Toolkit;
+
 
 public class GrabController : MonoBehaviour
 {
     public static GrabController instance = null;
-    private XRGrabInteractable ferramenta;
-    private XRSocketInteractor socket;
+    private UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable ferramenta;
+    private UnityEngine.XR.Interaction.Toolkit.Interactors.XRSocketInteractor socket;
 
     [Header("Controllers")]
     public XiloController xiloController;
@@ -46,7 +46,7 @@ public class GrabController : MonoBehaviour
                 if (ferramenta.gameObject.GetComponent<AudioSource>().isPlaying)
                 {
                     ferramenta.gameObject.GetComponent<AudioSource>().Stop();
-                    painter.setVerifSound(true);
+                    //painter.setVerifSound(true);
                 }
                 socket.allowHover = true;
                 ferramenta.transform.position = socket.transform.position;
@@ -54,14 +54,14 @@ public class GrabController : MonoBehaviour
         }
     }
 
-    public void setTool(XRGrabInteractable ferramenta)
+    public void setTool(UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable ferramenta)
     {
         this.ferramenta = ferramenta;
         ferramenta.transform.Rotate(Vector3.right, -30f);
         //Debug.LogError("saiu");
     }
 
-    public void setSocket(XRSocketInteractor socket)
+    public void setSocket(UnityEngine.XR.Interaction.Toolkit.Interactors.XRSocketInteractor socket)
     {
         this.socket = socket;
     }
@@ -71,11 +71,11 @@ public class GrabController : MonoBehaviour
         if(ferramenta != null)
             ferramenta.transform.Rotate(Vector3.right, 30f);
         ferramenta = null;
-        FindObjectOfType<MenuController>().enableTextIndicator(false);
+        //FindObjectOfType<MenuController>().enableTextIndicator(false);
     }
 
     public bool isGrab(GameObject tool){
-        XRGrabInteractable ferramenta = tool.GetComponent<XRGrabInteractable>();
+        UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable ferramenta = tool.GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRGrabInteractable>();
         if (this.ferramenta == null)
             return false;
         return this.ferramenta.Equals(ferramenta); 

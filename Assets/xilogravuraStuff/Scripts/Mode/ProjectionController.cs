@@ -6,30 +6,10 @@ public class ProjectionController : MonoBehaviour
 {
     [Header("Atributos da projeção")]
     [Tooltip("- para o usuário (em metros)")]
-    [Range(0.1f, 5f)][SerializeField] private float distaciaDaCamera;
-    [Tooltip("(em metros)")]
-    [Range(0.5f, 1.5f)][SerializeField] private float AlturaDaCamera;
-
-    [Header("Componentes")]
-    public Transform virtualCamera;
-    public Transform TrackCameraOffset;
-    public Transform ARCamera;
-    //public Transform Tools;
-
-    private bool setVideo = false;
+    [Range(0f, 5f)][SerializeField] private float distance;
 
     public void Start()
     {
-        float distancia = Mathf.Abs(virtualCamera.localPosition.z) - distaciaDaCamera;
-        TrackCameraOffset.localPosition = new Vector3(TrackCameraOffset.localPosition.x, AlturaDaCamera, 0);
-    }
-
-    public void Update()
-    {
-        if (!setVideo && ARCamera.childCount > 0){
-            Transform firstChild = ARCamera.GetChild(0);
-            firstChild.gameObject.layer = LayerMask.NameToLayer("video");
-            setVideo = true;
-        }
+        transform.position += transform.forward * distance;
     }
 }
