@@ -30,6 +30,12 @@ public class DynamicPainting : MonoBehaviour
     [SerializeField] private GameObject[] canvasObjs;
     [SerializeField] private Steps currentStep;
 
+    private GameObject pencil;
+    private GameObject gouge;
+    private GameObject sandpaper;
+    private GameObject ink;
+    private GameObject roller;
+    private GameObject baren;
 
     float brushSizeFixed = 1f;
     Material drawSpriteMat;
@@ -47,12 +53,12 @@ public class DynamicPainting : MonoBehaviour
                             value => setBrushSize(Mathf.RoundToInt(value))
                         );
 
-        pencil = tool.getTool(ToolsIndex.PENCIL);
-        gouge = tool.getTool(ToolsIndex.GOUGE);
-        sandpaper = tool.getTool(ToolsIndex.SANDPAPER);
-        ink = tool.getTool(ToolsIndex.INK);
-        roller = tool.getTool(ToolsIndex.PAINT_ROLLER);
-        baren = tool.getTool(ToolsIndex.BAREN);
+        pencil = tool.getTool(AvailableTools.PENCIL);
+        gouge = tool.getTool(AvailableTools.GOUGE);
+        sandpaper = tool.getTool(AvailableTools.SANDPAPER);
+        ink = tool.getTool(AvailableTools.INK);
+        roller = tool.getTool(AvailableTools.PAINT_ROLLER);
+        baren = tool.getTool(AvailableTools.BAREN);
     }
 
     void Update()
@@ -85,7 +91,6 @@ public class DynamicPainting : MonoBehaviour
                 DrawInterpolationLine(renderTexture[maskIndex], spriteBrush[(int)brushType.SQUARE], lastSpriteUV.Value, currentUV, brushSizeFixed);
             else { 
                 tool.initSound();
-                //tool.ini
             }
 
             lastSpriteUV = currentUV;
@@ -133,14 +138,16 @@ public class DynamicPainting : MonoBehaviour
     }
 
     private MeshCollider meshCollider = null;
-    private bool HitUVPosition(ref Vector3 uvWorldPosition)
-    {
+    private bool HitUVPosition(ref Vector3 uvWorldPosition){
         if (pointer == null) return false;
+
         Vector3 screenPos = sceneCamera.WorldToScreenPoint(pointer.position);
         if (screenPos.z <= 0) return false;
+
         Ray ray = sceneCamera.ScreenPointToRay(new Vector3(screenPos.x, screenPos.y, 0f));
         Debug.DrawRay(ray.origin, ray.direction * 10f, Color.green);
         RaycastHit[] hits = Physics.RaycastAll(ray, 10f);
+
         foreach (var hit in hits){
             meshCollider = hit.collider as MeshCollider;
             if (meshCollider != null && meshCollider.sharedMesh != null && canvasObjs.Contains(meshCollider.gameObject)){
@@ -152,13 +159,6 @@ public class DynamicPainting : MonoBehaviour
         return false;
     }
 
-
-    private GameObject pencil;
-    private GameObject gouge;
-    private GameObject sandpaper;
-    private GameObject ink;
-    private GameObject roller;
-    private GameObject baren;
     private bool checkStep(GameObject hitObject)
     {
         GameObject currentTool = tool.getCurrentTool();
@@ -167,6 +167,7 @@ public class DynamicPainting : MonoBehaviour
         bool allowed = false;
         Steps previousStep = currentStep;
 
+        print(LayerMask.LayerToName(hitObject.layer));
         switch (LayerMask.LayerToName(hitObject.layer)){
             case "newArt":
                 break;
@@ -174,9 +175,9 @@ public class DynamicPainting : MonoBehaviour
                 if (allowed = IsValidStep(pencil, currentTool, Steps.SKETCHING))       currentStep = Steps.SKETCHING;
                 else if (allowed = IsValidStep(gouge, currentTool, Steps.CARVING))     currentStep = Steps.CARVING;
                 else if (allowed = IsValidStep(sandpaper, currentTool, Steps.SANDING)) currentStep = Steps.SANDING;
-                else if (allowed = IsValidStep(ink, currentTool, Steps.INKING))        currentStep = Steps.INKING;
                 break;
             case "glass":
+                if (allowed = IsValidStep(ink, currentTool, Steps.INKING)) currentStep = Steps.INKING;
                 break;
             case "paper":
                 break;
@@ -206,6 +207,7 @@ public class DynamicPainting : MonoBehaviour
     public void resetPointer() //usado quando se perder o tracking da ferramenta
     {
         pointer = null;
+        lastUV = null;
     } 
     public void incrementMaskIndex() //avanca uma etapa
     {

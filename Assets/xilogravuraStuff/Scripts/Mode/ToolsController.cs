@@ -2,23 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ProjectionMode : ExperienceMode
+public class ToolsController : MonoBehaviour
 {
     public int paintAngle = 350;
     public UDPReceiver tracking;
     private Transform tool = null;
 
-    public void Start()
-    {
-        mode = Mode.PROJECTION;
-    }
-
-    public override void getMode()
-    {
-        Debug.Log("MODE: " + mode);
-    }
-
-    public override bool condicaoDePintura()
+    public bool condicaoDePintura()
     {
         //print(tool.transform.eulerAngles.x);
         if(tool == null)

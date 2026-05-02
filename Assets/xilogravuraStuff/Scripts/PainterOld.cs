@@ -24,7 +24,6 @@ public class Painter : MonoBehaviour
     public GrabController grabController;
     public MenuController menuController;
     [SerializeField] private Camera cam;
-    [SerializeField] public ExperienceMode mode;
     private bool verifSound = true;
     private bool verifSoundWood = false;
     private bool verifSoundGlass = false;
@@ -40,6 +39,7 @@ public class Painter : MonoBehaviour
 
     private bool raycastAnterior = false;
     bool mirrorState = false;
+    private ToolsController toolsController = null;
 
     void Start()
     {
@@ -55,7 +55,6 @@ public class Painter : MonoBehaviour
 
         drawMaterial = new Material(drawShader);
         drawMaterial.SetVector("_Color", Color.white);
-        mode.getMode();
     }
 
     private void Awake()
@@ -83,32 +82,21 @@ public class Painter : MonoBehaviour
     }
 
     public RaycastHit? CheckDraw(GameObject tool, int layerMask, bool prevStep, bool nextStep, ParticleSystem particles){
+        if (toolsController == null)
+            toolsController = FindFirstObjectByType<ToolsController>();
+
         RaycastHit hit;
-        if (mode.mode == Mode.VR && !grabController.isGrab(tool))
-            return null;
         if (prevStep && !nextStep){
             Vector3 pointerPosition = getPointerPosition(tool);
-            bool condicaoDePintura = mode.condicaoDePintura();
+            bool condicaoDePintura = toolsController.condicaoDePintura();
             Ray ray = cam.ScreenPointToRay(pointerPosition);
             if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask) 
             && (condicaoDePintura || click())){
-                if (mode.mode == Mode.PROJECTION && !mode.GetComponent<ProjectionMode>().checkTool(tool)){
+                if (!toolsController.checkTool(tool)){
                     raycastAnterior = false;
                     return null;
                 }
 
-                if(mode.mode == Mode.VR){
-                    float distance = Vector3.Distance(tool.transform.position, hit.transform.position);
-                    //print(distance);
-                    bool frontRaycast = layerMask == 1 << LayerMask.NameToLayer("wood") 
-                                        || layerMask == 1 << LayerMask.NameToLayer("paper") 
-                                        || layerMask == 1 << LayerMask.NameToLayer("newArt");
-                    if ((distance > maxDistance) && frontRaycast || (distance > maxDistanceGlass) && !frontRaycast){
-                        disableActionTool(layerMask, tool, particles);
-                        //menuController.enableTextIndicator(true);
-                        return null;
-                    }
-                }
                 //menuController.enableTextIndicator(false);
 
                 //excecao para angulo da goiva
@@ -123,7 +111,7 @@ public class Painter : MonoBehaviour
             }
             else
             {
-                if (mode.mode == Mode.VR || (mode.mode == Mode.PROJECTION && !raycastAnterior))
+                if (!raycastAnterior)
                     disableActionTool(layerMask, tool, particles);
                 raycastAnterior = false;
             }

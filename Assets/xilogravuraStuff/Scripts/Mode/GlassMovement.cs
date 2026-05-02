@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class GlassMovement : MonoBehaviour
 {
-    public ProjectionMode projectionMode;
+    public ToolsController projectionMode;
     public XiloController xiloController;
     public InkRollerController inkRollerController;
     private bool isGlass = false;
@@ -19,7 +19,7 @@ public class GlassMovement : MonoBehaviour
     {
         Transform tool = projectionMode.getTool();
         float startPos = transform.localPosition.y;
-        if (tool != null && tool.name.Equals("tinta") && !isGlass && xiloController.isSanded)
+        if (tool != null && tool.name.Equals("tinta"))
             StartCoroutine(MoveToPosition(startPos, .85f));
         if (inkRollerController.isInkEnable() && isGlass)
             StartCoroutine(MoveToPosition(startPos, initialPosition));

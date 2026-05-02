@@ -10,9 +10,8 @@ using UnityEngine.XR.Interaction.Toolkit;
 public class MenuController : MonoBehaviour
 {
     public Button start;
-    public Button createYourArt;
+    //public Button createYourArt;
     public GameObject desenho;
-    public GameObject tituloMenu;
     public Button left;
     public Button right;
     public Button voltar;
@@ -37,7 +36,7 @@ public class MenuController : MonoBehaviour
 
     private GameObject drawingCurrent;
 
-    private int indice=0;
+    private int indice = 0;
     private int indiceAnterior = 0;
     private bool switchImage = false;
     private bool verifStart = false;
@@ -46,7 +45,6 @@ public class MenuController : MonoBehaviour
     public GameObject matriz;
     public GameObject vidro;
     public GameObject papel;
-    public GameObject art;
     public Rect cropRect;
 
 
@@ -54,21 +52,14 @@ public class MenuController : MonoBehaviour
     public Slider slider;
     public GameObject save;
 
-    private bool unlock = true;
-    private Transform tool = null;
-
-    //public float detectionInterval = 0.5f;
     public float detectionThreshold = 0.35f;
-    private float lastDetectionTime;
-    private float lastPosX;
 
-    public Image bigArrowLeft;
-    public Image bigArrowRight;
     public Color colorSelect = Color.green;
     public Color colorDeselect= Color.white;
     public Color colorDisable = Color.gray;
     public TextMeshProUGUI textBrushStatus;
     public GameObject menu;
+    public GameObject draw;
     public GameObject firstInstruction;
     public AudioSource audioSource;
 
@@ -77,8 +68,8 @@ public class MenuController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        spriteTexture = Sprite.Create(desenhos[indice].texture, cropRect, new Vector2(0.5f, 0.5f));
-        drawingCurrent = GameObject.Find("Desenho");
+        spriteTexture = desenhos[indice];
+        drawingCurrent = GameObject.Find("Art");
         
         posicionarFolhaButton = posicionarFolhaMenu.GetComponentInChildren<Button>();
         resultadoButton = resultadoMenu.GetComponentInChildren<Button>();
@@ -91,13 +82,9 @@ public class MenuController : MonoBehaviour
 
         //firstInstruction?.SetActive(true);
 
-        enableTextIndicator(false);
-
-        //left.onClick.AddListener(() => PreviousMenu());
-        //right.onClick.AddListener(() => NextMenu());
         start.onClick.AddListener(() => StartExp());
         voltar.onClick.AddListener(() => ReturnProcess());
-        createYourArt.onClick.AddListener(() => Invoke("Create", 1f));
+        //createYourArt.onClick.AddListener(() => Invoke("Create", 1f));
 
         posicionarFolhaButton.onClick.AddListener(() => posicionarFolha());
         resultadoButton.onClick.AddListener(() => StartCoroutine(mostarResultado()));
@@ -108,33 +95,12 @@ public class MenuController : MonoBehaviour
 
     private void ReturnProcess()
     {
-        if (art.activeSelf)
-        {
-            art.GetComponent<NewArtController>().ReturnProcess();
-        }
+        //if (art.activeSelf)
+        //{
+        //    art.GetComponent<NewArtController>().ReturnProcess();
+        //}
 
         var xilo = matriz.GetComponent<XiloController>();
-
-        if (xilo.isPaint)
-        {
-            xilo.ResetOneTexture("PaintMask");
-            xilo.isPaint = false;
-        }
-        else if (xilo.isSanded)
-        {
-            xilo.ResetOneTexture("SandMask");
-            xilo.isSanded = false;
-        }
-        else if (xilo.isSculped)
-        {
-            xilo.ResetOneTexture("SculptMask");
-            xilo.isSculped = false;
-        }
-        else if (xilo.isSketched)
-        {
-            xilo.ResetOneTexture("SketchMask");
-            xilo.isSketched = false;
-        }
     }
 
 
@@ -143,32 +109,30 @@ public class MenuController : MonoBehaviour
     {
         //Cursor.visible = false;
 
-        if (matriz.GetComponent<XiloController>().isPainted() && !folhaPosicionada)
-        {
-            posicionarFolhaMenu.SetActive(true);
-        }
+        //if (matriz.GetComponent<XiloController>().isPainted() && !folhaPosicionada)
+        //{
+        //    posicionarFolhaMenu.SetActive(true);
+        //}
         if (papel.GetComponent<PaperController>().isPrinted() && !folhaResultado)
         {
             voltar.gameObject.SetActive(false);
             resultadoMenu.SetActive(true);
         }
 
-        if (!verifStart && (indice != indiceAnterior || !switchImage))
+        if ((indice != indiceAnterior))
         {
+            spriteTexture = desenhos[indice];
             drawingCurrent.GetComponent<Image>().sprite = spriteTexture;
 
             indiceAnterior = indice;
-            left.enabled = true;
-            right.enabled = true;
+            left.interactable = true;
+            right.interactable = true;
         }
 
-        if (art.GetComponent<NewArtController>().isArt())
-        {
-            start.gameObject.SetActive(true);
-        }
-
-        if (tool != null && tool.gameObject.activeSelf)
-            checkArrowsProjection();
+        //if (art.GetComponent<NewArtController>().isArt())
+        //{
+        //    start.gameObject.SetActive(true);
+        //}
     }
 
     void posicionarFolha()
@@ -194,42 +158,28 @@ public class MenuController : MonoBehaviour
 
     public void NextMenu()
     {
-        right.enabled = false;
+        right.interactable = false;
         switchImage = true;
-        if (indice == desenhos.Length-1)
-        {
-            indice = 0;
-        }
-        else
-        {
-            indice++;
-        }
+        indice = (indice + 1) % desenhos.Length;
     }
 
     public void PreviousMenu()
     {
-        left.enabled = false;
+        left.interactable = false;
         switchImage = true;
-        if(indice <= 0)
-        {
-            indice = desenhos.Length-1;
-        }
-        else
-        {
-            indice--;
-        }
+        indice = (indice - 1 + desenhos.Length) % desenhos.Length;
     }
 
     private void StartExp()
     {
         //verifStart = true;
         undoMenu.SetActive(true);
-        canva = GameObject.Find("Menu");
-        if (canva != null)
+        if (menu != null)
         {
             configurarSimulacao();
-            canva.SetActive(false);
-            art?.SetActive(false);
+            menu.SetActive(false);
+            draw?.SetActive(false);
+            //art?.SetActive(false);
             voltar.gameObject.SetActive(true);
         }
         //firstInstruction?.SetActive(false);
@@ -241,54 +191,38 @@ public class MenuController : MonoBehaviour
         right.gameObject.SetActive(false);
         start.gameObject.SetActive(false);
         desenho.SetActive(false);
-        tituloMenu.SetActive(false);
-        createYourArt.gameObject.SetActive(false);
+        //createYourArt.gameObject.SetActive(false);
         voltar.gameObject.SetActive(true);
-        art?.SetActive(true);
+        //art?.SetActive(true);
         artAutoral = true;
     }
 
     void configurarSimulacao()
     {
 
-        if (artAutoral)
-        {
-            NewArtController newArtController = art.GetComponent<NewArtController>();
-            setDesenhoEscolhido(newArtController.getTexture("SketchMask"));
-        }
-        else
-        {
+        //if (artAutoral)
+        //{
+        //    NewArtController newArtController = art.GetComponent<NewArtController>();
+        //    setDesenhoEscolhido(newArtController.getTexture("SketchMask"));
+        //}
+        //else
+        //{
             Sprite spriteAtual = desenhos[indice];
-            if (spriteAtual != null)
-            {
-                int width = (int)(spriteAtual.rect.width * 0.65f);
-                int height = (int)(spriteAtual.rect.height * 0.65f);
-
-                int startX = (int)(spriteAtual.rect.x + (spriteAtual.rect.width - width) / 2);
-                int startY = (int)(spriteAtual.rect.y + (spriteAtual.rect.height - height) / 2); //CORRIGIR ESSA PORRA AQUI
-
-                Texture2D desenho = new Texture2D(width, height);
-
-                desenho.SetPixels(spriteAtual.texture.GetPixels(startX, startY, width, height));
-
-
-                desenho.Apply();
-
-                setDesenhoEscolhido(desenho);
+            if (spriteAtual != null){
+                setChosenArt(spriteAtual.texture);
             }
-        }
+        //}
     }
 
-    public void setDesenhoEscolhido(Texture desenho)
+    public void setChosenArt(Texture art)
     {
         matriz.GetComponent<XiloController>().enableProcess();
-        matriz.GetComponent<XiloController>().setTextures();
         Material xiloMaterial = matriz.GetComponent<MeshRenderer>().materials[0];
-        xiloMaterial.SetTexture("SketchTexture", desenho);
+        xiloMaterial.SetTexture("SketchTexture", art);
 
 
         Material paperMaterial = papel.GetComponent<MeshRenderer>().materials[0];
-        paperMaterial.SetTexture("SketchTexture", desenho);
+        paperMaterial.SetTexture("SketchTexture", art);
 
         if (artAutoral)
         {
@@ -308,7 +242,7 @@ public class MenuController : MonoBehaviour
         //com uma bela identacao pra dizer o que eu nao consigo documentar
         restartMenu.SetActive(false);
         XiloController xiloController = matriz.GetComponent<XiloController>();
-        xiloController.resetTextures();
+        //xiloController.resetTextures();
         xiloController.resetValues();
 
         GlassController glassController = vidro.GetComponent<GlassController>();
@@ -319,16 +253,14 @@ public class MenuController : MonoBehaviour
         paperController.resetTextures();
         paperController.resetValues();
 
-        NewArtController newArtController = art.GetComponent<NewArtController>();
-        newArtController.resetTextures();
-        newArtController.resetValues();
+        //NewArtController newArtController = art.GetComponent<NewArtController>();
+        //newArtController.resetTextures();
+        //newArtController.resetValues();
 
-        FindObjectOfType<MarcadorController>().Reset();
+        FindFirstObjectByType<MarcadorController>().Reset();
 
         //Corrige preset ao reiniciar
-        FindObjectOfType<Painter>().SetBrushPreset(Brush.HardCircle);
-
-        enableTextIndicator(false);
+        FindFirstObjectByType<Painter>().SetBrushPreset(Brush.HardCircle);
 
         folhaPosicionada = false;
         folhaResultado = false;
@@ -338,11 +270,6 @@ public class MenuController : MonoBehaviour
 
         undoMenu.SetActive(false);
         //firstInstruction?.SetActive(true);
-    }
-
-    public void enableTextIndicator(bool state)
-    {
-        outOfRangText?.SetActive(state);
     }
 
     public void firstOptionByProjection()
@@ -360,11 +287,12 @@ public class MenuController : MonoBehaviour
 
     public void secondOptionByProjection()
     {
-        if (voltar != null && voltar.IsActive() && art.activeSelf)
-            ReturnProcess();
-        if (createYourArt != null && createYourArt.IsActive())
-            Create();
-        else if (voltar != null && voltar.IsActive())
+        //if (voltar != null && voltar.IsActive() && art.activeSelf)
+        //    ReturnProcess();
+        //if (createYourArt != null && createYourArt.IsActive())
+        //    Create();
+        //else 
+        if (voltar != null && voltar.IsActive())
             ReturnProcess();
         else if (restartButton != null && restartButton.IsActive()){
             restart();
@@ -372,8 +300,7 @@ public class MenuController : MonoBehaviour
             desenho.SetActive(true);
             left.gameObject.SetActive(true);
             right.gameObject.SetActive(true);
-            createYourArt.gameObject.SetActive(true);
-            tituloMenu.SetActive(true);
+            //createYourArt.gameObject.SetActive(true);
         }
         playClick();
     }
@@ -381,73 +308,6 @@ public class MenuController : MonoBehaviour
     private void playClick()
     {
         audioSource.Play();
-    }
-
-    public void setArrow(Transform tool)
-    {
-        this.tool = tool;
-        tool.transform.localPosition = new Vector3(0f, 0f, 0f);
-    }
-
-    public void resetArrow()
-    {
-        tool = null;
-    }
-
-    private void checkArrowsProjection()
-    {
-        if (unlock){ 
-            if (tool.transform.localPosition.x <= -detectionThreshold){
-                if (right.IsActive())
-                {
-                    NextMenu();
-                    unlock = false;
-                    bigArrowRight.color = colorSelect;
-                }
-                else{
-                    //if(slider.value != slider.maxValue){
-                    //    slider.value = Mathf.Clamp(slider.value + 1, slider.minValue, slider.maxValue);
-                    //    unlock = false;
-                    //    bigArrowRight.color = colorSelect;
-                    //}
-                }
-            }
-            else if (tool.transform.localPosition.x >= detectionThreshold){
-                if (left.IsActive()){
-                    PreviousMenu();
-                    unlock = false;
-                    bigArrowLeft.color = colorSelect;
-                }
-                else
-                {
-                    //if (slider.value != slider.minValue)
-                    //{
-                    //    slider.value = Mathf.Clamp(slider.value - 1, slider.minValue, slider.maxValue);
-                    //    unlock = false;
-                    //    bigArrowLeft.color = colorSelect;
-                    //}
-                }
-            }
-        }
-        if (tool.transform.localPosition.x > -detectionThreshold && tool.transform.localPosition.x < detectionThreshold)
-        {
-            unlock = true;
-            if (slider.value == slider.maxValue)
-                bigArrowRight.color = colorDisable;
-            else
-                bigArrowRight.color = colorDeselect;
-
-            if (slider.value == slider.minValue)
-                bigArrowLeft.color = colorDisable;
-            else
-                bigArrowLeft.color = colorDeselect;
-        }
-        //if (!right.IsActive() && !left.IsActive()){
-        //    textBrushStatus.gameObject.SetActive(true);
-        //    textBrushStatus.text = "Tamanho do pincel: " + displaySlidValue();
-        //}
-        //else
-        //    textBrushStatus.gameObject.SetActive(false);
     }
 
     private float displaySlidValue()

@@ -6,18 +6,10 @@ public class ProjectionController : MonoBehaviour
 {
     [Header("Atributos da projeção")]
     [Tooltip("- para o usuário (em metros)")]
-    [Range(0.1f, 5f)][SerializeField] private float distaciaDaCamera;
-    [Tooltip("(em metros)")]
-    [Range(0.5f, 1.5f)][SerializeField] private float AlturaDaCamera;
-
-    [Header("Componentes")]
-    public Transform virtualCamera;
-    //public Transform Tools;
-
-    private bool setVideo = false;
+    [Range(0f, 5f)][SerializeField] private float distance;
 
     public void Start()
     {
-        float distancia = Mathf.Abs(virtualCamera.localPosition.z) - distaciaDaCamera;
+        transform.position += transform.forward * distance;
     }
 }

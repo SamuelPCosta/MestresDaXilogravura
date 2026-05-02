@@ -9,7 +9,7 @@ public class MarcadorController : MonoBehaviour
     [Header("Objects")]
     public GameObject[] ganchos;
     public GameObject marcador;
-    public GameObject[] icons;
+    //public GameObject[] icons;
     public Material outline;
 
     [Header("Controllers")]
@@ -19,7 +19,7 @@ public class MarcadorController : MonoBehaviour
     public PaperController paperController;
 
     [Header("Mode")]
-    public ExperienceMode mode;
+    public ToolsController toolsController;
 
     private MeshRenderer currentTool = null;
 
@@ -32,14 +32,14 @@ public class MarcadorController : MonoBehaviour
     {
         textTutorial.text = "";
         marcador.gameObject.SetActive(false);
-        for (int i = 0; i < icons.Length; i++)
-            icons[i].SetActive(false);
+        //for (int i = 0; i < icons.Length; i++)
+        //    icons[i].SetActive(false);
     }
 
     // Update is called once per frame
     void Update()
     {
-        if ((mode.mode == Mode.VR && grabController.isToolNull()) || (mode.mode == Mode.PROJECTION && !mode.GetComponent<ProjectionMode>().isToolInUse()))
+        if (!toolsController.isToolInUse())
             atualizarMarcador();
     }
 
@@ -61,21 +61,21 @@ public class MarcadorController : MonoBehaviour
         string tutorialText = "";
         //int ganchoIndex = 0;
 
-        int index = paperController.isSheetPositioned() ? 5 :
-            xiloController.isPaint ? 5 :
-            glassController.getInkEnable() ? 4 :
-            xiloController.isSanded ? 3 :
-            xiloController.isSculped ? 2 :
-            xiloController.isSketched ? 1 : 0;
+        int index = 0;
+        //    paperController.isSheetPositioned() ? 5 :
+        //    xiloController.isPaint ? 5 :
+        //    glassController.getInkEnable() ? 4 :
+        //    xiloController.isSanded ? 3 :
+        //    xiloController.isSculped ? 2 :
+        //    xiloController.isSketched ? 1 : 0;
 
-        tutorialText = Instructions[index];
+        //tutorialText = Instructions[index];
 
-        if (mode.mode == Mode.PROJECTION)
-            refreshIcon(index);
+        //refreshIcon(index);
 
         textTutorial.text = tutorialText;
         marcador.gameObject.SetActive(true);
-        marcador.transform.position = ganchos[index].transform.position;
+        //marcador.transform.position = ganchos[index].transform.position;
 
         if(currentTool != null && currentTool.sharedMaterials.Length > 1)
         {
@@ -102,7 +102,7 @@ public class MarcadorController : MonoBehaviour
     }
 
     private void refreshIcon(int index) {
-        for (int i = 0; i < icons.Length; i++)
-            icons[i].SetActive(i == index);
+        //for (int i = 0; i < icons.Length; i++)
+        //    icons[i].SetActive(i == index);
     }
 }

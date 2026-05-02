@@ -66,7 +66,7 @@ public class UDPReceiver : MonoBehaviour
                 {
                     var jsonData = JsonUtility.FromJson<UDPData>(receivedData);
                     ledStatus = jsonData.led == "true";
-                    if (ledStatus) Debug.Log(jsonData.id);
+                    //if (ledStatus) Debug.Log(jsonData.id);
 
                     pendingData = jsonData;
                 }

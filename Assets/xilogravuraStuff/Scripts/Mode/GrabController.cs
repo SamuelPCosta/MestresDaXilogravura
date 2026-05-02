@@ -71,7 +71,7 @@ public class GrabController : MonoBehaviour
         if(ferramenta != null)
             ferramenta.transform.Rotate(Vector3.right, 30f);
         ferramenta = null;
-        FindObjectOfType<MenuController>().enableTextIndicator(false);
+        //FindObjectOfType<MenuController>().enableTextIndicator(false);
     }
 
     public bool isGrab(GameObject tool){

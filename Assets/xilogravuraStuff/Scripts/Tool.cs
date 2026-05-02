@@ -2,14 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum ToolsIndex { PENCIL, GOUGE, SANDPAPER, PAINT_ROLLER, INK, BAREN }
+public enum AvailableTools { PENCIL, GOUGE, SANDPAPER, INK, PAINT_ROLLER, BAREN }
 
 public class Tool : MonoBehaviour
 {
     [SerializeField] private Transform pointer;
     [SerializeField] private Transform[] tools;
-    [SerializeField] private Transform[] boardTools;
-    [SerializeField] private ProjectionMode mode;
+    [SerializeField] private ToolsController mode;
     [SerializeField] private DynamicPainting paint;
 
     private bool resetCursor = false;
@@ -25,8 +24,6 @@ public class Tool : MonoBehaviour
             pointer.gameObject.SetActive(true);
             foreach (Transform t in tools)
                 t.gameObject.SetActive(false);
-            foreach (Transform t in boardTools)
-                t.gameObject.SetActive(true);
 
             currentTool = pointer;
             isCursor = true;
@@ -56,8 +53,6 @@ public class Tool : MonoBehaviour
 
             foreach (Transform t in tools)
                 t.gameObject.SetActive(false);
-            foreach (Transform t in boardTools)
-                t.gameObject.SetActive(true);
             currentTool = null;
             mode.resetTool();
             stabilize = false;
@@ -75,7 +70,6 @@ public class Tool : MonoBehaviour
             if (data.id == i)
             {
                 currentTool = tools[i];
-                boardTools[i].gameObject.SetActive(false);
                 paint.setPointer(currentTool.GetChild(0));
             }
         }
@@ -88,16 +82,15 @@ public class Tool : MonoBehaviour
         return true;
     }
 
-    private void UpdateTransform(UDPData data, bool Movement2D)
-    {
-        float influency = -0.45f;
+    private void UpdateTransform(UDPData data, bool Movement2D){
+        float influency = -0.75f;
         float influencyRoatation = 58f;
-        float lerpFactor = 0.85f;
+        float lerpFactor = (currentTool != null) ? 0.85f : 1f;
 
         Vector3 targetPosition = new Vector3(
             data.position[0] * influency,
             data.position[1] * influency,
-            !Movement2D ? data.position[2] * (influency / 2) : 5f
+            0f
         );
 
         Vector3 futurePositon = Vector3.Lerp(
@@ -130,7 +123,7 @@ public class Tool : MonoBehaviour
         else return null;
     }
 
-    public GameObject getTool(ToolsIndex index) => tools[(int)index].gameObject;
+    public GameObject getTool(AvailableTools index) => tools[(int)index].gameObject;
 
     #region sound
     public bool isPlaying = false;
