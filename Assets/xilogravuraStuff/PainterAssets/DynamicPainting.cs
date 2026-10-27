@@ -16,6 +16,7 @@ public class DynamicPainting : MonoBehaviour
     [SerializeField] private RenderTexture[] renderTexture;
     [SerializeField] private Transform pointer;
     [SerializeField] private UDPReceiver _UDPReceiver;
+    [SerializeField] private JoystickController joystick;
     [SerializeField] private Tool tool;
 
     [Header("Brush")]
@@ -63,7 +64,7 @@ public class DynamicPainting : MonoBehaviour
 
     void Update()
     {
-        if (_UDPReceiver.ledStatus)
+        if (joystick.getValue()>0f)
             CheckPaint();
         else { 
             lastSpriteUV = null;

@@ -12,9 +12,7 @@ public class UDPReceiver : MonoBehaviour
     Thread receiveThread;
     public RenderTexture displayTarget;
     private Texture2D _receivedTexture;
-    public bool ledStatus;
     public bool isCursor = false;
-    public GameObject ledIndicator;
     [SerializeField] private Tool tool;
 
     //######################
@@ -32,7 +30,6 @@ public class UDPReceiver : MonoBehaviour
         receiveThread.IsBackground = true;
         receiveThread.Start();
         _receivedTexture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-        ledIndicator.SetActive(false);
     }
 
     private UDPData pendingData;
@@ -62,12 +59,9 @@ public class UDPReceiver : MonoBehaviour
             try{
                 byte[] data = udpClient.Receive(ref remoteEP);
                 string receivedData = Encoding.UTF8.GetString(data).Trim();
-                try
-                {
+                try{
                     var jsonData = JsonUtility.FromJson<UDPData>(receivedData);
-                    ledStatus = jsonData.led == "true";
                     //if (ledStatus) Debug.Log(jsonData.id);
-
                     pendingData = jsonData;
                 }
                 catch (Exception e){
@@ -87,7 +81,6 @@ public class UDPReceiver : MonoBehaviour
                     _receivedTexture.Reinitialize(2, 2);
                 _receivedTexture.LoadImage(imageBytes);
                 Graphics.Blit(_receivedTexture, displayTarget);
-                ledIndicator.SetActive(ledStatus);
             });
         }
     }

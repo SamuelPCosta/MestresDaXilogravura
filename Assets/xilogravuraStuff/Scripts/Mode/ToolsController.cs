@@ -8,20 +8,6 @@ public class ToolsController : MonoBehaviour
     public UDPReceiver tracking;
     private Transform tool = null;
 
-    public bool condicaoDePintura()
-    {
-        //print(tool.transform.eulerAngles.x);
-        if(tool == null)
-            return false;
-        //return true;
-        //print(tool.parent.name +": "+tool.parent.transform.localPosition.z);
-
-        if (tool.name.Equals("colher"))
-            return true;
-
-        return tracking.ledStatus;
-    }
-
     public void setTool(Transform tool){
         this.tool = tool;
     }

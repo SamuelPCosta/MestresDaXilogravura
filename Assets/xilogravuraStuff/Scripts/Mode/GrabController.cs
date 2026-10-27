@@ -13,7 +13,7 @@ public class GrabController : MonoBehaviour
     [Header("Controllers")]
     public XiloController xiloController;
     public GlassController glassController;
-    public Painter painter;
+    //public Painter painter;
     
     // Start is called before the first frame update
     void Start()

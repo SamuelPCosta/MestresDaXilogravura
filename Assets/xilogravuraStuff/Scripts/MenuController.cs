@@ -260,7 +260,7 @@ public class MenuController : MonoBehaviour
         FindFirstObjectByType<MarcadorController>().Reset();
 
         //Corrige preset ao reiniciar
-        FindFirstObjectByType<Painter>().SetBrushPreset(Brush.HardCircle);
+        //FindFirstObjectByType<Painter>().SetBrushPreset(Brush.HardCircle);
 
         folhaPosicionada = false;
         folhaResultado = false;

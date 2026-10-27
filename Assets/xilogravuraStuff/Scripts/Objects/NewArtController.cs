@@ -11,7 +11,7 @@ public class NewArtController : InteractiveObject
 {
     private RaycastHit? hit;
 
-    public Painter painter;
+    //public Painter painter;
     public GrabController grabController;
     public GameObject matriz;
 
@@ -68,7 +68,7 @@ public class NewArtController : InteractiveObject
     // Update is called once per frame
     void Update()
     {
-        Draw();
+        //Draw();
     }
 
     // Metodo para debug no simulador
@@ -77,23 +77,23 @@ public class NewArtController : InteractiveObject
         return Mouse.current.leftButton.isPressed;
     }
 
-    public void Draw()
-    {
-        int layerMask = 1 << LayerMask.NameToLayer("newArt");
-        if ((hit = painter.CheckDraw(lapisDeRascunho, layerMask, true, false, null)) != null)
-        {
-            painter.SetBrushPreset(Brush.HardCircle);
-            isSketched = true;
-        }
+    //public void Draw()
+    //{
+    //    int layerMask = 1 << LayerMask.NameToLayer("newArt");
+    //    if ((hit = painter.CheckDraw(lapisDeRascunho, layerMask, true, false, null)) != null)
+    //    {
+    //        painter.SetBrushPreset(Brush.HardCircle);
+    //        isSketched = true;
+    //    }
 
-        if (hit != null)
-        {
-            RaycastHit validHit = hit.Value;
-            painter.PaintMask(textureDictionary["SketchMask"], validHit, true);
-            //if (validHit.collider == null || (painter.mode.mode == Mode.VR && grabController.isToolNull()))
-            //    painter.stopSound(lapisDeRascunho.gameObject);
-        }
-    }
+    //    if (hit != null)
+    //    {
+    //        RaycastHit validHit = hit.Value;
+    //        painter.PaintMask(textureDictionary["SketchMask"], validHit, true);
+    //        //if (validHit.collider == null || (painter.mode.mode == Mode.VR && grabController.isToolNull()))
+    //        //    painter.stopSound(lapisDeRascunho.gameObject);
+    //    }
+    //}
 
     public void resetValues()
     {

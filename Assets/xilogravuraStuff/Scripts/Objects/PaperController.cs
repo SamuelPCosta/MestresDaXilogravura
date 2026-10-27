@@ -11,7 +11,7 @@ public class PaperController : InteractiveObject
 {
     private RaycastHit? hit;
 
-    public Painter painter;
+    //public Painter painter;
     public GrabController grabController;
 
     public GameObject ferramenta;
@@ -53,35 +53,35 @@ public class PaperController : InteractiveObject
         }
     }
 
-    public void Draw()
-    {
-        int layerMask = 1 << 12;
-        //if(xilogravura.isPainted())
-        //    layerMask = 1 << 10;// CORRIGE O PROBLEMA DA COLHER NA PROJECAO
-        if ((hit = painter.CheckDraw(ferramenta, layerMask, true, resultado, null)) != null)
-        {
-            if (!setarTexturas)
-            {
-                painter.SetBrushPreset(Brush.Ink);
-                currentMaterial.SetTexture("SketchMask", xilogravura.getTexture("SketchMask"));
-                currentMaterial.SetTexture("SculptMask", xilogravura.getTexture("SculptMask"));
-                currentMaterial.SetTexture("PaintMask", xilogravura.getTexture("PaintMask"));
-                setarTexturas = true;
-            }
-            marcarEtapa(ref isPrint);
-        }
+    //public void Draw()
+    //{
+    //    int layerMask = 1 << 12;
+    //    //if(xilogravura.isPainted())
+    //    //    layerMask = 1 << 10;// CORRIGE O PROBLEMA DA COLHER NA PROJECAO
+    //    if ((hit = painter.CheckDraw(ferramenta, layerMask, true, resultado, null)) != null)
+    //    {
+    //        if (!setarTexturas)
+    //        {
+    //            painter.SetBrushPreset(Brush.Ink);
+    //            currentMaterial.SetTexture("SketchMask", xilogravura.getTexture("SketchMask"));
+    //            currentMaterial.SetTexture("SculptMask", xilogravura.getTexture("SculptMask"));
+    //            currentMaterial.SetTexture("PaintMask", xilogravura.getTexture("PaintMask"));
+    //            setarTexturas = true;
+    //        }
+    //        marcarEtapa(ref isPrint);
+    //    }
 
-        if (hit != null)
-        {
-            RaycastHit validHit = hit.Value;
-            validHit.point = new Vector3(-validHit.point.x, validHit.point.y, validHit.point.z); //TESTE INVTERTER X
+    //    if (hit != null)
+    //    {
+    //        RaycastHit validHit = hit.Value;
+    //        validHit.point = new Vector3(-validHit.point.x, validHit.point.y, validHit.point.z); //TESTE INVTERTER X
 
-            painter.PaintMask(textureDictionary["PrintMask"], validHit, false);
-            ferramenta.GetComponent<Tool>().initSound();
-            //if (validHit.collider == null || (painter.mode.mode == Mode.VR && grabController.isToolNull()))
-            //    painter.stopSound(ferramenta.gameObject);
-        }
-    }
+    //        painter.PaintMask(textureDictionary["PrintMask"], validHit, false);
+    //        ferramenta.GetComponent<Tool>().initSound();
+    //        //if (validHit.collider == null || (painter.mode.mode == Mode.VR && grabController.isToolNull()))
+    //        //    painter.stopSound(ferramenta.gameObject);
+    //    }
+    //}
 
     void marcarEtapa(ref bool etapa)
     {
@@ -98,8 +98,8 @@ public class PaperController : InteractiveObject
 
     void Update()
     {
-        if(sheetPositioned)
-            Draw();
+        //if(sheetPositioned)
+        //    Draw();
     }
 
     public void posicionarFolha()

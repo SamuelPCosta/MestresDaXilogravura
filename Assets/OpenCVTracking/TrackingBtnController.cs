@@ -54,11 +54,11 @@ public class TrackingBtnController : MonoBehaviour
                     selectedBtn = button;
                 }
 
-                if (tracking.ledStatus) { 
-                    button = result.gameObject.GetComponent<Button>();
-                    ExecuteEvents.Execute(button.gameObject, pointerEventData, ExecuteEvents.pointerClickHandler);
-                    StartCoroutine(WaitForNextClick());
-                }
+                //if (tracking.ledStatus) { 
+                //    button = result.gameObject.GetComponent<Button>();
+                //    ExecuteEvents.Execute(button.gameObject, pointerEventData, ExecuteEvents.pointerClickHandler);
+                //    StartCoroutine(WaitForNextClick());
+                //}
                 break;
             }
             else if (result.gameObject.GetComponentInParent<Slider>() != null)
@@ -73,8 +73,8 @@ public class TrackingBtnController : MonoBehaviour
 
                 selectedSlider.targetGraphic.color = slider.colors.pressedColor;
 
-                if (!tracking.ledStatus)
-                    continue;
+                //if (!tracking.ledStatus)
+                //    continue;
 
                 Canvas canvas = slider.GetComponentInParent<Canvas>();
                 Camera eventCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : Camera.main;
