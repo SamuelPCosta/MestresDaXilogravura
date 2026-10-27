@@ -63,7 +63,8 @@ Legenda: `[ ]` pendente · `[~]` em andamento · `[x]` concluída
 **Pronto quando:** o fluxo arte → lápis → goiva → lixa é controlado só pelo painel, com Voltar funcionando.
 
 ## Fase 5 — Tinta, papel e impressão
-- [ ] **T5.1** `InkPourHandler` (ângulo + raycast do bico → `InkMask`). [REQ-INK-1]
+- [x] **T5.1** `InkPourHandler`: derrama quando o pote está seguro, a inclinação do eixo `up` do pote em relação à **normal do acrílico** é > `pourAngle` (60°) e o bico está acima do acrílico (> `minHeightAboveGlass`). Raycast para baixo a partir do bico → `InkMask`; partículas `Particle SystemTinta` no bico; `minCoverage` 8%. Validado: em pé (30° vs acrílico) não derrama; deitado (90°) derrama. [REQ-INK-1]
+- [x] **T4.0** (antecipado) `StepProgressView`: slider world-space + rótulo em `Desk/UI/Center/StepProgress` mostrando título e % da etapa.
 - [ ] **T5.2** `RollerInk` (port do `InkRollerController`) + `RollerLoadHandler`. [REQ-INK-2]
 - [ ] **T5.3** MatrixInking com a trava `RollerInk.IsLoaded`. [REQ-INK-3]
 - [ ] **T5.4** `PaperSheet` (port do `PaperController`, sem Animator) + socket na matriz + `PaperPlacementHandler`, incluindo o Voltar (papel volta para a pilha). [REQ-PAPER-1, REQ-ANIM-1]

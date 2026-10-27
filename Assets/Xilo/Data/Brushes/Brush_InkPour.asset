@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Xilo.Runtime::Xilo.Painting.BrushProfile
   stampTexture: {fileID: 2800000, guid: 8caef79e0ab1cc642bb8abc0a2fe3981, type: 3}
   lineTexture: {fileID: 2800000, guid: 5449c178f1b0f484bba40c29f6c587de, type: 3}
-  size: 0.08
+  size: 0.1
   minStrokeDistance: 0.002

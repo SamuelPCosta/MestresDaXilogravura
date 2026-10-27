@@ -31,7 +31,9 @@ namespace Xilo.Tools
 
         [SerializeField] Transform[] tipSamples;
         [SerializeField] LayerMask surfaceMask;
+        [Tooltip("How far beyond the tip (meters) a surface still counts as touched. Increase to draw from farther away.")]
         [SerializeField] float contactDistance = 0.015f;
+        [Tooltip("How far behind the tip (meters) the ray starts, so contact still works if the tip sinks into the surface.")]
         [SerializeField] float backOffset = 0.02f;
         [SerializeField] bool requireActiveStep = true;
         [SerializeField] bool logContacts = true;
