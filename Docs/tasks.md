@@ -46,12 +46,12 @@ Legenda: `[ ]` pendente · `[~]` em andamento · `[x]` concluída
 **Pronto quando:** dá para pegar e soltar cada ferramenta com o controle simulado, a ferramenta da etapa aparece destacada e o gizmo da ponta acusa contato com as superfícies.
 
 ## Fase 3 — Pintura e cobertura
-- [ ] **T3.1** `BrushProfile` (SO) + `MaskPainter` (extraído do `DynamicPainting`). [REQ-TOOL-2 AC2]
-- [ ] **T3.2** `PaintableSurface` com `MaskBinding` na matriz, no acrílico e no papel; checar MeshColliders/UVs.
-- [ ] **T3.3** `CoverageCalculator` (puro, com testes) + `CoverageMeter` (AsyncGPUReadback 128²). [REQ-STEP-2, NFR-1]
-- [ ] **T3.4** Calibrar o `CoverageTarget` de cada etapa observando o `XiloShader` (sem alterá-lo).
-- [ ] **T3.5** `PaintStepHandler` genérico para Sketching, Carving e Sanding, com `ClearProgress`. [REQ-STEP-2/3]
-- [ ] **T3.6** Atalhos F/C (preencher/limpar máscara). [REQ-DEV-2]
+- [x] **T3.1** `BrushProfile` (SO, 6 assets em `Xilo/Data/Brushes`) + `MaskPainter` (extraído do `DynamicPainting`, usa `Hidden_DrawSprite.mat`, limite de stamps/frame). Traço contínuo validado (linha de UV 0,26→0,74 sem falhas). [REQ-TOOL-2 AC2]
+- [x] **T3.2** `PaintableSurface` na matriz (Sketch/Sculpt/Sandpaper/Paint → RTs 1,2,3,5), acrílico (Ink → RT 4) e papel (lê Sketch/Sculpt/Paint da matriz + `PrintMask` criada em runtime). Material instanciado em runtime (os `.mat` não mudam). `Workbench` aplica a arte (`SketchTexture`, `autoral = 0`); `previewArt = coco` até a Fase 4.
+- [x] **T3.3** `CoverageCalculator` (6 testes) + `CoverageMeter` (AsyncGPUReadback 128², a cada 0,25 s; alvos da arte construídos uma vez). [REQ-STEP-2, NFR-1]
+- [x] **T3.4** Alvos: as artes são linhas pretas (13–20%) em fundo branco → Sketching = `ArtDark`, Carving = `ArtLight`, Sanding = `FullSurface`. Ajustar `minCoverage` jogando.
+- [x] **T3.5** `PaintStepHandler` em Sketching, Carving e Sanding. Validado: Próximo libera ao atingir o mínimo; Voltar limpa só a etapa atual (Carving 100%→0%, Sketching mantido em 100%). [REQ-STEP-2/3]
+- [x] **T3.6** Atalhos F7 (preencher) / F8 (limpar) via `StepHandlerBase.DebugFill/ClearProgress`. [REQ-DEV-2]
 
 **Pronto quando:** lápis → goiva → lixa funcionam na matriz com o visual atual, a cobertura sobe e Voltar limpa a etapa atual.
 
