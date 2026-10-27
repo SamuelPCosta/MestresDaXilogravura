@@ -28,6 +28,9 @@ namespace Xilo.Core
 
         public abstract void ClearProgress();
 
+        // Editor debug: completes the step's progress instantly when supported.
+        public virtual void DebugFill() { }
+
         protected abstract void OnEnter(StepContext context);
         protected abstract void OnExit();
 

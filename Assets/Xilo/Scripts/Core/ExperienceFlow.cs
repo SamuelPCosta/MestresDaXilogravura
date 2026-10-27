@@ -31,7 +31,7 @@ namespace Xilo.Core
         public bool CanGoBack => machine.CanGoBack;
         public IEnumerable<StepHandlerBase> Handlers => handlers;
 
-        StepHandlerBase CurrentHandler => handlersById[machine.Current];
+        public StepHandlerBase CurrentHandler => handlersById[machine.Current];
 
         // Builds the handler map in StepId order and creates the state machine.
         void Awake()

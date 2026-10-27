@@ -24,6 +24,10 @@ namespace Xilo.Dev
                 Run("Force next", flow.ForceNext);
             else if (keyboard.f6Key.wasPressedThisFrame)
                 Run("Back", flow.Back);
+            else if (keyboard.f7Key.wasPressedThisFrame)
+                Run("Fill current mask", flow.CurrentHandler.DebugFill);
+            else if (keyboard.f8Key.wasPressedThisFrame)
+                Run("Clear current mask", flow.CurrentHandler.ClearProgress);
             else if (keyboard.f9Key.wasPressedThisFrame)
                 Run("Restart", flow.Restart);
             else if (keyboard.f10Key.wasPressedThisFrame && tools != null)
