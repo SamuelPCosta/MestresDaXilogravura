@@ -65,8 +65,8 @@ Legenda: `[ ]` pendente · `[~]` em andamento · `[x]` concluída
 ## Fase 5 — Tinta, papel e impressão
 - [x] **T5.1** `InkPourHandler`: derrama quando o pote está seguro, a inclinação do eixo `up` do pote em relação à **normal do acrílico** é > `pourAngle` (60°) e o bico está acima do acrílico (> `minHeightAboveGlass`). Raycast para baixo a partir do bico → `InkMask`; partículas `Particle SystemTinta` no bico; `minCoverage` 8%. Validado: em pé (30° vs acrílico) não derrama; deitado (90°) derrama. [REQ-INK-1]
 - [x] **T4.0** (antecipado) `StepProgressView`: slider world-space + rótulo em `Desk/UI/Center/StepProgress` mostrando título e % da etapa.
-- [ ] **T5.2** `RollerInk` (port do `InkRollerController`) + `RollerLoadHandler`. [REQ-INK-2]
-- [ ] **T5.3** MatrixInking com a trava `RollerInk.IsLoaded`. [REQ-INK-3]
+- [x] **T5.2** `RollerInk` (port do `InkRollerController`, material instanciado da borracha: `isTinta`, `inkLevel` 1→0 em 1,25 s) + `RollerLoadHandler` (lê o `InkMask` uma vez ao entrar; carrega só ao encostar em pixel com tinta; sem tinta no acrílico, qualquer contato carrega). Probes do rolo refeitos: 8 em volta da borracha (antes estavam no cabo). Validado: canto sem tinta não carrega; centro com tinta carrega. [REQ-INK-2]
+- [x] **T5.3** MatrixInking com `RollerPaintStepHandler` (só pinta com `RollerInk.IsLoaded`). Validado: faixa pintada no `PaintMask`, slider acompanha. [REQ-INK-3]
 - [ ] **T5.4** `PaperSheet` (port do `PaperController`, sem Animator) + socket na matriz + `PaperPlacementHandler`, incluindo o Voltar (papel volta para a pilha). [REQ-PAPER-1, REQ-ANIM-1]
 - [ ] **T5.5** Pressing com o barém → `PrintMask`; ligar as máscaras da matriz no papel. [REQ-PRINT-1]
 - [ ] **T5.6** `RevealHandler` + `RevealPanel`. [REQ-PRINT-2]
