@@ -20,12 +20,16 @@ Legenda: `[ ]` pendente · `[~]` em andamento · `[x]` concluída
 **Pronto quando:** o projeto compila, a Room abre e nenhum asset visual foi alterado.
 
 ## Fase 1 — Core e simulador
-- [ ] **T1.1** `XiloLog` + `ShaderProps`. [REQ-DEV-3, C-6]
-- [ ] **T1.2** `StepId`, `StepDefinition` (SO), `StepMachine` + testes EditMode. [REQ-STEP-1/3/4]
-- [ ] **T1.3** `IStepHandler`, `StepContext`, `ExperienceFlow` com handlers stub (logam Enter/Exit/Clear) + eventos `OnStepEntered/Exited`. [REQ-STEP-1, REQ-ANIM-1]
-- [ ] **T1.4** Configurar o XR Origin com **controles** (XRI Starter Assets) e adicionar o **XR Interaction Simulator** na Room e no Menu; sem locomoção. [REQ-DEV-1, REQ-SES-3]
-- [ ] **T1.5** `DebugStepHotkeys` (N/B/R), checando conflitos com os atalhos do simulador. [REQ-DEV-2]
-- [ ] **T1.6** Criar os 10 assets `StepDefinition` em `Xilo/Data/Steps/` com textos provisórios em pt-BR.
+- [x] **T1.0** Desligar o Meta XR Simulator: `InitManagerOnStart = false` no **Standalone** (o runtime OpenXR ativo do Windows é o Meta XR Simulator). Android não foi alterado.
+  - ⚠️ **Android não tem loader XR configurado** (lista vazia). Habilitar OpenXR + perfil Meta Quest antes da T7.2.
+- [x] **T1.1** `XiloLog` + `ShaderProps`. [REQ-DEV-3, C-6]
+- [x] **T1.2** `StepId`, `StepDefinition` (SO), `StepMachine` + testes EditMode (8/8 passando). [REQ-STEP-1/3/4]
+- [x] **T1.3** `IStepHandler`, `StepHandlerBase`, `StepContext`, `ExperienceFlow` com `StubStepHandler` (logam Enter/Exit/Clear) + eventos `OnStepEntered/Exited`. [REQ-STEP-1, REQ-ANIM-1]
+- [x] **T1.4** `XR Origin (XR Rig)` do XRI 3.3.2 (controles, Near-Far + Poke) + **XR Interaction Simulator** na Room e no Menu; locomoção desligada (Move, Teleport, Climb, Jump), Snap Turn mantido. `EditorOnlySimulator` remove o simulador em build/headset real e reinicia o `XRInputModalityManager` quando os controles simulados ficam rastreados (corrige controles invisíveis). [REQ-DEV-1, REQ-SES-3]
+  - Room: objetos legados desativados (Receivers/PythonLauncher/UDP, ToolsController, DynamicPaint, MenuController, CanvasOverlay, `Room/UI`) e componentes legados das superfícies desligados. Ferramentas antigas em `LegacyTools` (inativo) para a Fase 2. XR Origin antigo desativado.
+  - Menu: Canvas convertido para world-space com `TrackedDeviceGraphicRaycaster`; `MenuPanel` mínimo no botão Iniciar (carrega a Room). Botão "Create" legado oculto.
+- [x] **T1.5** `DebugStepHotkeys`: **F5** próximo (força), **F6** voltar, **F9** reiniciar (o simulador usa N/C/R; F7/F8 ficam para a Fase 3). [REQ-DEV-2]
+- [x] **T1.6** 10 assets `StepDefinition` em `Xilo/Data/Steps/` com textos provisórios em pt-BR.
 
 **Pronto quando:** no simulador, N/B/R percorrem as etapas e os logs mostram as transições.
 
