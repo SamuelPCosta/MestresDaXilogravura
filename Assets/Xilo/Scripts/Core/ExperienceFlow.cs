@@ -23,6 +23,7 @@ namespace Xilo.Core
         public event Action<StepDefinition> StepEntered;
         public event Action<float> ProgressChanged;
         public event Action<bool> CanAdvanceChanged;
+        public event Action Restarted;
 
         public StepId CurrentStep => machine.Current;
         public StepDefinition CurrentDefinition => CurrentHandler.Definition;
@@ -87,6 +88,7 @@ namespace Xilo.Core
                 foreach (StepHandlerBase handler in handlers)
                     handler.ClearProgress();
                 XiloLog.Info(LogCategory, "Restart", this);
+                Restarted?.Invoke();
                 machine.Reset();
                 EnterCurrent();
             }

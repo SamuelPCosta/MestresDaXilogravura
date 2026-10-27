@@ -91,8 +91,8 @@ Formato: **REQ-ID** e critérios de aceite (AC) no padrão *QUANDO / ENTÃO*.
 
 **REQ-TOOL-1 — Empunhadura**
 - AC1: QUANDO o usuário aponta/encosta o controle numa ferramenta e pressiona **Grip**, ENTÃO a ferramenta fica presa à âncora do controle (XRGrabInteractable).
-- AC2: QUANDO solta o Grip, ENTÃO a ferramenta é liberada com física e repousa na bancada.
-- AC3: QUANDO uma ferramenta cai fora da área útil (chão ou fora do alcance), ENTÃO volta à sua posição de origem na bancada em até 2 s.
+- AC2: QUANDO solta o Grip, ENTÃO a ferramenta volta deslizando para sua posição de origem na bancada (~0,3 s). *Ajuste da Fase 2:* a Desk é inclinada 30° em direção ao usuário, então ferramentas com física escorregariam; elas ficam kinematic na origem.
+- AC3: QUANDO o fluxo é reiniciado, ENTÃO todas as ferramentas voltam instantaneamente à origem (soltando a que estiver na mão).
 
 **REQ-TOOL-2 — Aplicação por contato da ponta**
 - AC1: Cada ferramenta tem uma ponta (`tip`). QUANDO a ponta está a ≤ `contactDistance` (padrão **1,5 cm**) de uma superfície pintável, ENTÃO o efeito é aplicado na coordenada UV do ponto de contato.

@@ -34,11 +34,14 @@ Legenda: `[ ]` pendente · `[~]` em andamento · `[x]` concluída
 **Pronto quando:** no simulador, N/B/R percorrem as etapas e os logs mostram as transições.
 
 ## Fase 2 — Ferramentas
-- [ ] **T2.1** `XiloTool` + `ToolId`; configurar os prefabs de lápis, goiva, lixa, pote de tinta, rolo e barém com `XRGrabInteractable` (attach transform para o controle), `Rigidbody` e `tip`. [REQ-TOOL-1]
-- [ ] **T2.2** `ToolHomeReturn`. [REQ-TOOL-1 AC3]
-- [ ] **T2.3** `ToolRegistry` + `ToolHighlighter` (Outline existente). [REQ-TOOL-3]
-- [ ] **T2.4** `ToolTipProbe` com gizmos de debug e suporte a múltiplos `tipSamples`. [REQ-TOOL-2]
-- [ ] **T2.5** Som, partículas e vibração opcional em `BeginUse/EndUse`. [REQ-TOOL-4]
+- [x] **T1.7** (ajustes) Gravidade desligada no rig; `RigStartPose` mantém a pose do `Camera Offset` da cena a cada carregamento (no headset descarta pitch/altura); botão "Crie sua arte" mantido no Menu.
+- [x] **T2.1** `XiloTool` + `ToolId`; ferramentas de `LegacyTools` movidas para `Desk/Tools` (Pencil, Gouge, Sandpaper, InkPot, Roller, Baren) com `XRGrabInteractable` kinematic (attach = filho `Attach` existente), `Rigidbody` kinematic e probes. [REQ-TOOL-1]
+- [x] **T2.2** `ToolHomeReturn`: volta deslizando à origem ao soltar; `SnapHome` no Restart. [REQ-TOOL-1]
+- [x] **T2.3** `ToolRegistry` + `ToolHighlighter` (`Outline.mat` existente) ligados ao `ExperienceFlow`. [REQ-TOOL-3]
+- [x] **T2.4** `ToolTipProbe` com gizmos e múltiplos `tipSamples`: lápis/goiva/pote = 1 probe na ponta (`pointer`); lixa/rolo/barém = 2 probes nas faces do eixo mais fino. Validado: todos acertam a matriz (MeshCollider + UV). [REQ-TOOL-2]
+  - Calibrar direção dos probes do rolo e do barém olhando os gizmos (filhos `Probes/ProbeA|B`), se necessário.
+- [x] **T2.5** Som (`AudioSource` existente), partículas (goiva → `Particle SystemMadeira`, lixa → `Particle SystemPo`) e haptics em `BeginUse/EndUse`. [REQ-TOOL-4]
+- ⚠️ **Escala/alcance:** a câmera está a ~1,77 m do plano da Desk; no headset (1:1) nada fica ao alcance do braço (~0,6 m). Decidir antes da validação em headset.
 
 **Pronto quando:** dá para pegar e soltar cada ferramenta com o controle simulado, a ferramenta da etapa aparece destacada e o gizmo da ponta acusa contato com as superfícies.
 
