@@ -56,9 +56,14 @@ Legenda: `[ ]` pendente · `[~]` em andamento · `[x]` concluída
 **Pronto quando:** lápis → goiva → lixa funcionam na matriz com o visual atual, a cobertura sobe e Voltar limpa a etapa atual.
 
 ## Fase 4 — UI (placeholders)
-- [ ] **T4.1** `StepPanel` (Voltar/Próximo/Reiniciar + barra + texto) com `Button.prefab`; layout simples. [REQ-STEP-2/3/4, NFR-7]
-- [ ] **T4.2** `ArtCatalog` (SO, todas as artes de `Draws/`) + `ArtSelectionPanel` + `ArtSelectionHandler`. [REQ-ART-1]
-- [ ] **T4.3** Reiniciar completo: máscaras, ferramentas, rolo e papel. [REQ-STEP-4]
+- [x] **T4.1** `StepPanel` em `Desk/UI/Center/OpcoesRuntime`; botões legados trocados pelo `Button.prefab` (tamanho em mundo preservado):
+  - **Refazer etapa** = Voltar (limpa a etapa atual e volta; desabilitado na escolha da arte)
+  - **Próximo** (novo, na posição do "Posicionar folha"): habilitado ao atingir a % mínima; oculto na escolha da arte, papel, barém e revelação
+  - **Posicionar folha** (só em PaperPlacement) e **Mostrar resultado** (só em Pressing) avançam a etapa
+  - **Salvar** (só na revelação; dispara `OnSaveRequested`, ligado na Fase 6) e **Reiniciar** (sempre), num Canvas novo `EndButtons`
+  [REQ-STEP-2/3/4, NFR-7]
+- [x] **T4.2** `ArtCatalog` (5 artes de `Draws/`) + `ArtSelectionPanel` no `Desk/UI/Folder` (botões `<`, `>`, **Escolher** trocados pelo prefab) + `ArtSelectionHandler` (mostra o Folder, aplica a arte e avança). [REQ-ART-1]
+- [x] **T4.3** Reiniciar: limpa máscaras, tinta e rolo, ferramentas voltam, volta à escolha da arte (papel entra na T5.4). [REQ-STEP-4]
 
 **Pronto quando:** o fluxo arte → lápis → goiva → lixa é controlado só pelo painel, com Voltar funcionando.
 
