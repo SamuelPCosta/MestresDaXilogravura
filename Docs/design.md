@@ -227,7 +227,9 @@ Troca de cena via `SceneManager.LoadSceneAsync`. Nenhum objeto de gameplay com `
 ### 3.8 Dev / simulador [REQ-DEV-*]
 
 - O prefab do **XR Interaction Simulator** (`Assets/Samples/XR Interaction Toolkit/3.3.2/XR Interaction Simulator`) é **colocado nas duas cenas**, configurado para rodar só no Editor e se desligar quando houver um dispositivo XR real ativo.
-- **`DebugStepHotkeys`** (só no Editor): `F5` próximo (ignora cobertura), `F6` voltar, `F7` preencher a máscara atual, `F8` limpar a máscara atual, `F9` reiniciar. Teclas de função porque o simulador já usa letras (N, C, R…).
+- **`DebugStepHotkeys`** (só no Editor): `F5` próximo (ignora cobertura), `F6` voltar, `F7` preencher a máscara atual, `F8` limpar a máscara atual, `F9` reiniciar, `F10` soltar todas as ferramentas. Teclas de função porque o simulador já usa letras (N, C, R…).
+- Simulador: `G` = grip do controle direito; `Shift + G` = grip do esquerdo (soltar **G antes do Shift**, senão o grip esquerdo fica preso — usar `F10` se acontecer); `[` / `]` alternam a manipulação dos controles; `Tab` cicla os dispositivos.
+- Grab: os casters do Near-Far incluem a layer `tools`; as ferramentas usam `farAttachMode = Near` (o raio puxa a ferramenta até o controle).
 - XR no Editor: `InitManagerOnStart` desligado no Standalone para o runtime OpenXR do sistema (Meta XR Simulator) não subir no Play Mode. O alvo real (Android) mantém a inicialização.
 - Com `backgroundBehavior = ResetAndDisableNonBackgroundDevices`, os controles simulados só ficam rastreados com a **Game view em foco**.
 

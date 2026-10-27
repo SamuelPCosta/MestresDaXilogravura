@@ -73,14 +73,25 @@ namespace Xilo.Tools
 
         public void ReturnAllHome()
         {
+            ReleaseAllHeld();
             foreach (XiloTool tool in toolsById.Values)
             {
-                if (tool.IsHeld)
-                    tool.Grab.interactionManager?.CancelInteractableSelection((UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable)tool.Grab);
                 if (tool.TryGetComponent(out ToolHomeReturn home))
                     home.SnapHome();
             }
             XiloLog.Info(LogCategory, "All tools returned home", this);
+        }
+
+        // Forces every held tool out of the hand (they glide home through ToolHomeReturn).
+        public void ReleaseAllHeld()
+        {
+            foreach (XiloTool tool in toolsById.Values)
+            {
+                if (!tool.IsHeld)
+                    continue;
+                tool.Grab.interactionManager?.CancelInteractableSelection((UnityEngine.XR.Interaction.Toolkit.Interactables.IXRSelectInteractable)tool.Grab);
+                XiloLog.Info(LogCategory, $"Forced release: {tool.Id}", this);
+            }
         }
 
         void HandleStepEntered(StepDefinition definition)

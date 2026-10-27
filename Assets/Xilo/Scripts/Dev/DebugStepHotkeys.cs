@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Xilo.Core;
+using Xilo.Tools;
 
 namespace Xilo.Dev
 {
@@ -10,6 +11,7 @@ namespace Xilo.Dev
         const string LogCategory = "Debug";
 
         [SerializeField] ExperienceFlow flow;
+        [SerializeField] ToolRegistry tools;
 
 #if UNITY_EDITOR
         void Update()
@@ -24,6 +26,8 @@ namespace Xilo.Dev
                 Run("Back", flow.Back);
             else if (keyboard.f9Key.wasPressedThisFrame)
                 Run("Restart", flow.Restart);
+            else if (keyboard.f10Key.wasPressedThisFrame && tools != null)
+                Run("Release all tools", tools.ReleaseAllHeld);
         }
 
         void Run(string label, System.Action action)
