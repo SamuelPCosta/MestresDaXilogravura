@@ -18,7 +18,7 @@ MonoBehaviour:
   toolId: 7
   surface: 3
   maskProperty: PrintMask
-  coverageTarget: 0
-  minCoverage: 0.7
+  coverageTarget: 4
+  minCoverage: 0.1
   instructionClip: {fileID: 0}
   toolLoopClip: {fileID: 0}

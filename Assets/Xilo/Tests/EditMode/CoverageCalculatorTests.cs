@@ -36,6 +36,22 @@ namespace Xilo.Tests
         }
 
         [Test]
+        public void UnpaintedTargetSelectsPixelsNotPaintedInMask()
+        {
+            bool[] target = CoverageCalculator.BuildUnpaintedTarget(Pixels(255, 0, 200, 10));
+
+            CollectionAssert.AreEqual(new[] { false, true, false, true }, target);
+        }
+
+        [Test]
+        public void InkedTargetIsInkedAndNotCarved()
+        {
+            bool[] target = CoverageCalculator.BuildInkedTarget(Pixels(255, 255, 0, 0), Pixels(0, 255, 0, 255));
+
+            CollectionAssert.AreEqual(new[] { true, false, false, false }, target);
+        }
+
+        [Test]
         public void FullSurfaceTargetsEverything()
         {
             bool[] target = CoverageCalculator.BuildTarget(Pixels(0, 255), CoverageTarget.FullSurface);

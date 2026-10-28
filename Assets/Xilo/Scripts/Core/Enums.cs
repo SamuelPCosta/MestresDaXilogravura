@@ -38,6 +38,8 @@ namespace Xilo.Core
     {
         FullSurface,
         ArtDark,
-        ArtLight
+        ArtLight,
+        Uncarved,
+        Inked
     }
 }

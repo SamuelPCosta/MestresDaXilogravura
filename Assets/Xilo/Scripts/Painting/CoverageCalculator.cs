@@ -26,6 +26,26 @@ namespace Xilo.Painting
             return result;
         }
 
+        // Target of the pixels NOT painted in another mask (e.g. the matrix areas left uncarved).
+        public static bool[] BuildUnpaintedTarget(ReadOnlySpan<byte> maskRgba)
+        {
+            int pixelCount = maskRgba.Length / 4;
+            var result = new bool[pixelCount];
+            for (int i = 0; i < pixelCount; i++)
+                result[i] = maskRgba[i * 4] < PaintedThreshold;
+            return result;
+        }
+
+        // Printable area: pixels inked by the roller on the relief (painted in the ink mask and not carved).
+        public static bool[] BuildInkedTarget(ReadOnlySpan<byte> inkRgba, ReadOnlySpan<byte> carveRgba)
+        {
+            int pixelCount = Math.Min(inkRgba.Length, carveRgba.Length) / 4;
+            var result = new bool[pixelCount];
+            for (int i = 0; i < pixelCount; i++)
+                result[i] = inkRgba[i * 4] >= PaintedThreshold && carveRgba[i * 4] < PaintedThreshold;
+            return result;
+        }
+
         public static bool[] BuildFullTarget(int pixelCount)
         {
             var result = new bool[pixelCount];

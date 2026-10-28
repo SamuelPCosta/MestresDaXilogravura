@@ -17,6 +17,11 @@ namespace Xilo.Painting
         [SerializeField] int resolution = 128;
         [SerializeField] float interval = 0.25f;
 
+        [Header("Dynamic targets (matrix masks)")]
+        [SerializeField] SurfaceId matrixSurface = SurfaceId.Matrix;
+        [SerializeField] string carveMaskProperty = ShaderProps.SculptMask;
+        [SerializeField] string inkMaskProperty = ShaderProps.PaintMask;
+
         readonly Dictionary<CoverageTarget, bool[]> targets = new();
         RenderTexture sampleTexture;
         RenderTexture trackedMask;
@@ -58,6 +63,9 @@ namespace Xilo.Painting
             onCoverage = callback;
             nextSampleTime = 0f;
             trackingVersion++;
+
+            if (IsDynamic(target))
+                BuildDynamicTarget(target);
         }
 
         public void Stop()
@@ -110,8 +118,12 @@ namespace Xilo.Painting
 
             try
             {
+                bool[] target = GetTarget(trackedTarget);
+                if (target == null)
+                    return;
+
                 NativeArray<byte> data = request.GetData<byte>();
-                float coverage = CoverageCalculator.Compute(data.AsReadOnlySpan(), GetTarget(trackedTarget));
+                float coverage = CoverageCalculator.Compute(data.AsReadOnlySpan(), target);
                 onCoverage.Invoke(coverage);
             }
             catch (Exception exception)
@@ -125,8 +137,86 @@ namespace Xilo.Painting
             if (targets.TryGetValue(target, out bool[] result))
                 return result;
 
+                // Dynamic targets are still being read back; skip this sample instead of reporting a wrong value.
+            if (IsDynamic(target))
+                return null;
+
             XiloLog.Warn(LogCategory, $"Target {target} not ready (no art yet), using full surface", this);
             return targets[CoverageTarget.FullSurface];
+        }
+
+        static bool IsDynamic(CoverageTarget target) => target is CoverageTarget.Uncarved or CoverageTarget.Inked;
+
+        // Reads the matrix masks once when a step starts tracking and builds its target:
+        // Uncarved = not carved; Inked = inked by the roller and not carved (the printable area).
+        void BuildDynamicTarget(CoverageTarget target)
+        {
+            targets.Remove(target);
+            PaintableSurface matrix = workbench != null ? workbench.Get(matrixSurface) : null;
+            RenderTexture carveMask = matrix != null ? matrix.GetMask(carveMaskProperty) : null;
+            RenderTexture inkMask = matrix != null ? matrix.GetMask(inkMaskProperty) : null;
+            if (carveMask == null || (target == CoverageTarget.Inked && inkMask == null))
+            {
+                XiloLog.Warn(LogCategory, $"Matrix masks for {target} not found, using full surface", this);
+                targets[target] = targets[CoverageTarget.FullSurface];
+                return;
+            }
+
+            int version = trackingVersion;
+            ReadMask(carveMask, version, carve =>
+            {
+                if (target == CoverageTarget.Uncarved)
+                {
+                    StoreDynamicTarget(target, CoverageCalculator.BuildUnpaintedTarget(carve));
+                    return;
+                }
+                ReadMask(inkMask, version, ink => StoreDynamicTarget(target, CoverageCalculator.BuildInkedTarget(ink, carve)));
+            });
+        }
+
+        void StoreDynamicTarget(CoverageTarget target, bool[] values)
+        {
+            targets[target] = values;
+            XiloLog.Info(LogCategory, $"{target} target built: {CountTrue(values) * 100f / values.Length:0.#}% of the surface", this);
+        }
+
+        // Downscales a mask and reads it back; the callback gets a copy (null-safe, ignored if tracking changed).
+        void ReadMask(RenderTexture mask, int version, Action<byte[]> onRead)
+        {
+            var temp = RenderTexture.GetTemporary(resolution, resolution, 0, RenderTextureFormat.ARGB32);
+            Graphics.Blit(mask, temp);
+            AsyncGPUReadback.Request(temp, 0, TextureFormat.RGBA32, request =>
+            {
+                RenderTexture.ReleaseTemporary(temp);
+                if (version != trackingVersion)
+                    return;
+                if (request.hasError)
+                {
+                    XiloLog.Warn(LogCategory, $"Readback of {mask.name} failed, using full surface", this);
+                    targets[trackedTarget] = targets[CoverageTarget.FullSurface];
+                    return;
+                }
+
+                try
+                {
+                    onRead(request.GetData<byte>().ToArray());
+                }
+                catch (Exception exception)
+                {
+                    XiloLog.Exception(LogCategory, exception, this);
+                }
+            });
+        }
+
+        static int CountTrue(bool[] values)
+        {
+            int count = 0;
+            foreach (bool value in values)
+            {
+                if (value)
+                    count++;
+            }
+            return count;
         }
 
         // Reads the art once at the meter resolution and builds the dark/light targets.

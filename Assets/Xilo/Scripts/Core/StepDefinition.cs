@@ -16,7 +16,8 @@ namespace Xilo.Core
 
         [Header("Coverage")]
         [SerializeField] CoverageTarget coverageTarget = CoverageTarget.FullSurface;
-        [SerializeField, Range(0f, 1f)] float minCoverage = 0.6f;
+        [SerializeField, Range(0f, 1f), Tooltip("Fraction of the possible area that must be covered to unlock Next.")]
+        float minCoverage = 0.1f;
 
         [Header("Audio")]
         [SerializeField] AudioClip instructionClip;

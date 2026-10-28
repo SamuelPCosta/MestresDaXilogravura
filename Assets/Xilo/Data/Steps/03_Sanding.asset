@@ -18,7 +18,7 @@ MonoBehaviour:
   toolId: 3
   surface: 1
   maskProperty: SandpaperMask
-  coverageTarget: 0
-  minCoverage: 0.5
+  coverageTarget: 3
+  minCoverage: 0.1
   instructionClip: {fileID: 0}
   toolLoopClip: {fileID: 0}
