@@ -72,9 +72,9 @@ Legenda: `[ ]` pendente · `[~]` em andamento · `[x]` concluída
 - [x] **T4.0** (antecipado) `StepProgressView`: slider world-space + rótulo em `Desk/UI/Center/StepProgress` mostrando título e % da etapa.
 - [x] **T5.2** `RollerInk` (port do `InkRollerController`, material instanciado da borracha: `isTinta`, `inkLevel` 1→0 em 1,25 s) + `RollerLoadHandler` (lê o `InkMask` uma vez ao entrar; carrega só ao encostar em pixel com tinta; sem tinta no acrílico, qualquer contato carrega). Probes do rolo refeitos: 8 em volta da borracha (antes estavam no cabo). Validado: canto sem tinta não carrega; centro com tinta carrega. [REQ-INK-2]
 - [x] **T5.3** MatrixInking com `RollerPaintStepHandler` (só pinta com `RollerInk.IsLoaded`). Validado: faixa pintada no `PaintMask`, slider acompanha. [REQ-INK-3]
-- [ ] **T5.4** `PaperSheet` (port do `PaperController`, sem Animator) + socket na matriz + `PaperPlacementHandler`, incluindo o Voltar (papel volta para a pilha). [REQ-PAPER-1, REQ-ANIM-1]
-- [ ] **T5.5** Pressing com o barém → `PrintMask`; ligar as máscaras da matriz no papel. [REQ-PRINT-1]
-- [ ] **T5.6** `RevealHandler` + `RevealPanel`. [REQ-PRINT-2]
+- [x] **T5.4** `PaperPlacementHandler` + `PoseTween` (IEnumerator + Lerp/Slerp, ease-in/out, arco parabólico `arcHeight`, preview por menu de contexto fora do Play). "Colocar papel" leva o `Paper` até `matriz/PaperPosition` em 1,5 s e avança; Voltar devolve o papel à pilha. O Animator legado é desligado ao mover (os clips usam coordenadas da montagem antiga). Eventos `OnPaperPlaced`/`OnPaperRemoved`, som `AparecerSound`. [REQ-PAPER-1, REQ-ANIM-1]
+- [x] **T5.5** Pressing com `PaintStepHandler` + `Brush_Baren` → `PrintMask` do papel; sondas do barém só na layer `paper`. Alvo `Inked` = pintado pelo rolo e não entalhado (área que imprime). Validado com contato real do barém: 0% → 56% numa varredura parcial. [REQ-PRINT-1]
+- [x] **T5.6** `RevealHandler` + `PaperSheet.Reveal`: vira a folha 180° no Y local (eixo no plano, como o clip legado `resultado`) subindo `flipLift` ao longo da normal para não atravessar a matriz; som `virarPapel` (clipes agora no `PaperSheet`, objetos `AparecerSound`/`VirarSound` removidos); botão de contexto "Preview reveal" no `PaperSheet`; o barém sobe no Y local enquanto o papel passa (`makeRoom`); evento `OnPrintRevealed`; o `StepPanel` mostra Salvar/Reiniciar (o "RevealPanel" ficou no próprio StepPanel). Voltar desfaz o giro; Reiniciar limpa as etapas de trás pra frente. [REQ-PRINT-2]
 
 **Pronto quando:** o pipeline completo roda no simulador até a revelação.
 

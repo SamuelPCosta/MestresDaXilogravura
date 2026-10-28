@@ -59,6 +59,15 @@ namespace Xilo.Core
 
         public void ForceNext() => Advance(true);
 
+        // Contextual buttons: runs the current step action when it has one, otherwise advances.
+        public void PerformStepAction()
+        {
+            if (CurrentHandler is IStepAction action)
+                action.PerformAction();
+            else
+                Next();
+        }
+
         // Clears the current step, then returns to the previous one keeping its progress.
         public void Back()
         {
@@ -79,14 +88,14 @@ namespace Xilo.Core
             }
         }
 
-        // Clears every step and goes back to the first one.
+        // Clears every step (last to first, undoing them in reverse) and goes back to the first one.
         public void Restart()
         {
             try
             {
                 ExitCurrent();
-                foreach (StepHandlerBase handler in handlers)
-                    handler.ClearProgress();
+                for (int i = handlers.Count - 1; i >= 0; i--)
+                    handlers[i].ClearProgress();
                 XiloLog.Info(LogCategory, "Restart", this);
                 Restarted?.Invoke();
                 machine.Reset();

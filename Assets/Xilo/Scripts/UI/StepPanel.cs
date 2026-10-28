@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
@@ -37,8 +38,8 @@ namespace Xilo.UI
 
             Bind(backButton, flow.Back);
             Bind(nextButton, flow.Next);
-            Bind(placeSheetButton, flow.Next);
-            Bind(showResultButton, flow.Next);
+            Bind(placeSheetButton, flow.PerformStepAction);
+            Bind(showResultButton, flow.PerformStepAction);
             Bind(saveButton, RequestSave);
             Bind(restartButton, flow.Restart);
         }
@@ -70,6 +71,7 @@ namespace Xilo.UI
             SetVisible(saveButton, currentStep == StepId.Reveal);
             SetVisible(restartButton, true);
             SetVisible(backButton, true);
+            RefreshGroups();
 
             if (backButton != null)
                 backButton.interactable = flow.CanGoBack;
@@ -94,7 +96,36 @@ namespace Xilo.UI
         static void Bind(Button button, UnityAction action)
         {
             if (button != null)
-                button.onClick.AddListener(action);
+                button.onClick.AddListener(ClickGuard.Wrap(action));
+        }
+
+        // Button containers (e.g. Basic, Conditionals) are shown only while they hold a visible button.
+        void RefreshGroups()
+        {
+            var groups = new HashSet<Transform>();
+            foreach (Button button in AllButtons())
+            {
+                if (button != null && button.transform.parent != transform)
+                    groups.Add(button.transform.parent);
+            }
+
+            foreach (Transform group in groups)
+                group.gameObject.SetActive(HasVisibleButton(group));
+        }
+
+        static bool HasVisibleButton(Transform group)
+        {
+            foreach (Transform child in group)
+            {
+                if (child.gameObject.activeSelf && child.GetComponent<Button>() != null)
+                    return true;
+            }
+            return false;
+        }
+
+        IEnumerable<Button> AllButtons()
+        {
+            return new[] { backButton, nextButton, placeSheetButton, showResultButton, saveButton, restartButton };
         }
 
         static void SetVisible(Button button, bool visible)
