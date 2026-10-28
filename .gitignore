@@ -17,3 +17,5 @@
 
 # Unity3D generated file on crash reports
 sysinfo.txt
+# Prints saved by the app (runtime output)
+/SavedImages/
