@@ -33,6 +33,12 @@ namespace Xilo.Steps
         bool isPouring;
         int lastLoggedDecile = -1;
 
+        void Awake()
+        {
+            if (pourParticles != null)
+                pourParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        }
+
         protected override void OnEnter(StepContext context)
         {
             if (!ResolveReferences())

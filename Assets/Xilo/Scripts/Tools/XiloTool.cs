@@ -40,6 +40,8 @@ namespace Xilo.Tools
             grab = GetComponent<XRGrabInteractable>();
             if (tip == null)
                 XiloLog.Warn(LogCategory, $"{name} has no tip assigned, using its own transform", this);
+            if (contactParticles != null)
+                contactParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
 
         void OnEnable()
