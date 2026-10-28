@@ -29,12 +29,15 @@ namespace Xilo.Tools
     {
         const string LogCategory = "Probe";
 
+        [Header("TIP CONTACT DISTANCE (meters) — how close the tip must be to paint")]
+        [Tooltip("How far beyond the tip a surface still counts as touched. Increase to paint from farther away. Shown as the yellow gizmo line.")]
+        [SerializeField, Range(0f, 0.15f)] float contactDistance = 0.015f;
+        [Tooltip("How far behind the tip the ray starts, so contact still works if the tip sinks into the surface.")]
+        [SerializeField, Range(0f, 0.15f)] float backOffset = 0.02f;
+
+        [Header("Samples and surfaces")]
         [SerializeField] Transform[] tipSamples;
         [SerializeField] LayerMask surfaceMask;
-        [Tooltip("How far beyond the tip (meters) a surface still counts as touched. Increase to draw from farther away.")]
-        [SerializeField] float contactDistance = 0.015f;
-        [Tooltip("How far behind the tip (meters) the ray starts, so contact still works if the tip sinks into the surface.")]
-        [SerializeField] float backOffset = 0.02f;
         [SerializeField] bool requireActiveStep = true;
         [SerializeField] bool logContacts = true;
 

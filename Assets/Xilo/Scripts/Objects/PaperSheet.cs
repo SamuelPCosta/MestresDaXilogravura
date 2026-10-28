@@ -15,7 +15,7 @@ namespace Xilo.Objects
         [Header("Reveal")]
         [SerializeField, Tooltip("Turn axis in the sheet's local space (an in-plane axis turns the sheet over).")]
         Vector3 flipLocalAxis = Vector3.up;
-        [SerializeField] float flipDegrees = 180f;
+        [SerializeField, Tooltip("Signed: the sign sets the turn direction.")] float flipDegrees = -180f;
         [SerializeField, Tooltip("Peak lift (meters) along the sheet normal halfway through, so it clears the matrix.")]
         float flipLift = 0.6f;
         [SerializeField] float flipDuration = 1.2f;

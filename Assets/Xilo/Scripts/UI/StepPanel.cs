@@ -22,10 +22,15 @@ namespace Xilo.UI
         [SerializeField] Button saveButton;
         [SerializeField] Button restartButton;
 
+        [Header("Feedback")]
+        [SerializeField, Tooltip("Plays when Next (or Show result) goes from disabled to enabled.")] AudioSource feedbackAudio;
+        [SerializeField] AudioClip unlockedClip;
+
         [Header("Hooks")]
         public UnityEvent OnSaveRequested = new();
 
         StepId currentStep;
+        bool advanceEnabled;
 
         void Awake()
         {
@@ -75,9 +80,11 @@ namespace Xilo.UI
 
             if (backButton != null)
                 backButton.interactable = flow.CanGoBack;
+            advanceEnabled = flow.CanAdvance;
             HandleCanAdvance(flow.CanAdvance);
         }
 
+        // Updates the advance buttons and plays the unlock sound on a disabled → enabled change of a visible Next/Show result.
         void HandleCanAdvance(bool canAdvance)
         {
             foreach (Button advance in new[] { nextButton, placeSheetButton, showResultButton })
@@ -85,7 +92,23 @@ namespace Xilo.UI
                 if (advance != null)
                     advance.interactable = canAdvance;
             }
+
+            if (canAdvance && !advanceEnabled && (IsShown(nextButton) || IsShown(showResultButton)))
+                PlayUnlocked();
+            advanceEnabled = canAdvance;
         }
+
+        void PlayUnlocked()
+        {
+            if (feedbackAudio == null || unlockedClip == null)
+            {
+                XiloLog.Warn(LogCategory, "Unlock sound not assigned", this);
+                return;
+            }
+            feedbackAudio.PlayOneShot(unlockedClip);
+        }
+
+        static bool IsShown(Button button) => button != null && button.gameObject.activeInHierarchy;
 
         void RequestSave()
         {
