@@ -19,6 +19,6 @@ MonoBehaviour:
   surface: 2
   maskProperty: 
   coverageTarget: 0
-  minCoverage: 0
+  minCoverage: 0.5
   instructionClip: {fileID: 0}
   toolLoopClip: {fileID: 0}
