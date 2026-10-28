@@ -30,9 +30,9 @@ namespace Xilo.UI
                 return;
             }
 
-            previousButton?.onClick.AddListener(() => Browse(-1));
-            nextButton?.onClick.AddListener(() => Browse(1));
-            chooseButton?.onClick.AddListener(Choose);
+            previousButton?.onClick.AddListener(ClickGuard.Wrap(() => Browse(-1)));
+            nextButton?.onClick.AddListener(ClickGuard.Wrap(() => Browse(1)));
+            chooseButton?.onClick.AddListener(ClickGuard.Wrap(Choose));
             Show(0);
         }
 

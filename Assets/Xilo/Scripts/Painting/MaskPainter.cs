@@ -11,6 +11,8 @@ namespace Xilo.Painting
 
         [SerializeField] Material drawSpriteMaterial;
         [SerializeField] int maxStampsPerFrame = 16;
+        [SerializeField, Tooltip("Limits for the user-chosen brush size multiplier.")]
+        Vector2 brushScaleRange = new(0.25f, 5f);
 
         Material material;
         int stampsThisFrame;
@@ -34,29 +36,40 @@ namespace Xilo.Painting
                 Destroy(material);
         }
 
-        public void Stamp(RenderTexture mask, BrushProfile brush, Vector2 uv)
+        // Multiplier chosen by the user (brush size slider); applied by callers that opt in.
+        public float BrushScale { get; private set; } = 1f;
+
+        public void SetBrushScale(float scale)
+        {
+            BrushScale = Mathf.Clamp(scale, brushScaleRange.x, brushScaleRange.y);
+            XiloLog.Info(LogCategory, $"Brush scale: {BrushScale:0.##}x", this);
+        }
+
+        public void Stamp(RenderTexture mask, BrushProfile brush, Vector2 uv, float sizeScale = 1f)
         {
             if (!CanDraw(mask, brush))
                 return;
 
-            Draw(mask, brush.StampTexture, uv, new Vector2(brush.Size, brush.Size), 0f);
+            float size = brush.Size * sizeScale;
+            Draw(mask, brush.StampTexture, uv, new Vector2(size, size), 0f);
         }
 
         // Fills the gap between two UV samples with a rotated line plus a stamp at the end.
-        public void Line(RenderTexture mask, BrushProfile brush, Vector2 fromUv, Vector2 toUv)
+        public void Line(RenderTexture mask, BrushProfile brush, Vector2 fromUv, Vector2 toUv, float sizeScale = 1f)
         {
             if (!CanDraw(mask, brush))
                 return;
 
+            float size = brush.Size * sizeScale;
             Vector2 direction = toUv - fromUv;
             float length = direction.magnitude;
             if (length > brush.MinStrokeDistance)
             {
                 float angle = Mathf.Atan2(direction.y, direction.x);
-                Draw(mask, brush.LineTexture, (fromUv + toUv) * 0.5f, new Vector2(length, brush.Size), angle);
+                Draw(mask, brush.LineTexture, (fromUv + toUv) * 0.5f, new Vector2(length, size), angle);
             }
 
-            Draw(mask, brush.StampTexture, toUv, new Vector2(brush.Size, brush.Size), 0f);
+            Draw(mask, brush.StampTexture, toUv, new Vector2(size, size), 0f);
         }
 
         public void Clear(RenderTexture mask)

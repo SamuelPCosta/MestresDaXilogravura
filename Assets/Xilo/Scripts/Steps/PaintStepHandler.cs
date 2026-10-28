@@ -88,9 +88,9 @@ namespace Xilo.Steps
                 return;
 
             if (lastUvBySample.TryGetValue(contact.SampleIndex, out Vector2 lastUv))
-                painter.Line(mask, brush, lastUv, contact.Uv);
+                painter.Line(mask, brush, lastUv, contact.Uv, painter.BrushScale);
             else
-                painter.Stamp(mask, brush, contact.Uv);
+                painter.Stamp(mask, brush, contact.Uv, painter.BrushScale);
 
             lastUvBySample[contact.SampleIndex] = contact.Uv;
             tool.BeginUse(contact.Point);
