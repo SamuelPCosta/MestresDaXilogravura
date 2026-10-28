@@ -88,6 +88,21 @@ namespace Xilo.Painting
             return null;
         }
 
+        // Points a binding to another texture (e.g. a sheet-space copy of a matrix mask) and updates the material.
+        public void ReplaceMask(string property, RenderTexture mask)
+        {
+            foreach (MaskBinding binding in masks)
+            {
+                if (binding.property != property)
+                    continue;
+                binding.mask = mask;
+                binding.ownsMask = false;
+                SetTexture(property, mask);
+                return;
+            }
+            XiloLog.Warn(LogCategory, $"{name}: no binding for {property}", this);
+        }
+
         public void ClearOwnedMasks()
         {
             foreach (MaskBinding binding in masks)

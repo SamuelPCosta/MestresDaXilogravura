@@ -21,6 +21,8 @@ namespace Xilo.Painting
         [SerializeField] SurfaceId matrixSurface = SurfaceId.Matrix;
         [SerializeField] string carveMaskProperty = ShaderProps.SculptMask;
         [SerializeField] string inkMaskProperty = ShaderProps.PaintMask;
+        [SerializeField, Tooltip("Inked is measured in the sheet space: this surface's carve/ink masks (mapped by PaperPrintMapping).")]
+        SurfaceId printSurface = SurfaceId.Paper;
 
         readonly Dictionary<CoverageTarget, bool[]> targets = new();
         RenderTexture sampleTexture;
@@ -152,9 +154,9 @@ namespace Xilo.Painting
         void BuildDynamicTarget(CoverageTarget target)
         {
             targets.Remove(target);
-            PaintableSurface matrix = workbench != null ? workbench.Get(matrixSurface) : null;
-            RenderTexture carveMask = matrix != null ? matrix.GetMask(carveMaskProperty) : null;
-            RenderTexture inkMask = matrix != null ? matrix.GetMask(inkMaskProperty) : null;
+            PaintableSurface source = workbench != null ? workbench.Get(target == CoverageTarget.Inked ? printSurface : matrixSurface) : null;
+            RenderTexture carveMask = source != null ? source.GetMask(carveMaskProperty) : null;
+            RenderTexture inkMask = source != null ? source.GetMask(inkMaskProperty) : null;
             if (carveMask == null || (target == CoverageTarget.Inked && inkMask == null))
             {
                 XiloLog.Warn(LogCategory, $"Matrix masks for {target} not found, using full surface", this);
@@ -220,7 +222,7 @@ namespace Xilo.Painting
         }
 
         // Reads the art once at the meter resolution and builds the dark/light targets.
-        void BuildArtTargets(Texture2D art)
+        void BuildArtTargets(Texture art)
         {
             var temp = RenderTexture.GetTemporary(resolution, resolution, 0, RenderTextureFormat.ARGB32);
             Graphics.Blit(art, temp);
