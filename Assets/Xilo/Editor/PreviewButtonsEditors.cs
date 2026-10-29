@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using Xilo.Gallery;
 using Xilo.Objects;
 using Xilo.Steps;
 using Xilo.Tools;
@@ -56,6 +57,23 @@ namespace Xilo.EditorTools
             EditorGUILayout.Space();
             if (PreviewButtons.Draw("▶ Preview baren hop (make room)"))
                 ((PaperPlacementHandler)target).PreviewMakeRoom();
+        }
+    }
+
+    [CustomEditor(typeof(DryingLine))]
+    sealed class DryingLineEditor : Editor
+    {
+        public override void OnInspectorGUI()
+        {
+            DrawDefaultInspector();
+            EditorGUILayout.Space();
+            using (new EditorGUI.DisabledScope(!Application.isPlaying))
+            {
+                var line = (DryingLine)target;
+                string label = line.ShowingWelcome ? "⇄ Debug: show saved prints" : "⇄ Debug: show welcome arts";
+                if (PreviewButtons.Draw(Application.isPlaying ? label : "⇄ Debug: toggle welcome arts (Play mode)"))
+                    line.ToggleWelcome();
+            }
         }
     }
 
