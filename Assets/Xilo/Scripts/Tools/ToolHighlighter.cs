@@ -1,57 +1,100 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Xilo.Tools
 {
-    // Appends the existing outline material to the tool renderers while highlighted.
+    // Shows the outline on the tool while highlighted, hidden while the tool is in the hand.
+    // Each tool renderer gets a twin child renderer drawing the same mesh with the outline material on every
+    // sub-mesh: appending the outline to the original renderer would only outline its last sub-mesh
+    // (e.g. just the label of the ink pot).
     public sealed class ToolHighlighter : MonoBehaviour
     {
         [SerializeField] Material outlineMaterial;
         [SerializeField] Renderer[] targetRenderers;
 
-        bool isHighlighted;
+        readonly List<MeshRenderer> outlines = new();
+        XiloTool tool;
+        bool requested;
 
         void Awake()
         {
             if (targetRenderers == null || targetRenderers.Length == 0)
                 targetRenderers = GetComponentsInChildren<MeshRenderer>(true);
+            tool = GetComponent<XiloTool>();
+            CreateOutlines();
+        }
+
+        void OnEnable()
+        {
+            if (tool == null)
+                return;
+            tool.Grabbed += HandleHoldChanged;
+            tool.Released += HandleHoldChanged;
+        }
+
+        void OnDisable()
+        {
+            if (tool == null)
+                return;
+            tool.Grabbed -= HandleHoldChanged;
+            tool.Released -= HandleHoldChanged;
         }
 
         public void SetOutlineMaterial(Material material)
         {
             if (outlineMaterial == material)
                 return;
-
-            bool wasHighlighted = isHighlighted;
-            SetHighlighted(false);
             outlineMaterial = material;
-            SetHighlighted(wasHighlighted);
+            foreach (MeshRenderer outline in outlines)
+                outline.sharedMaterials = OutlineMaterials(outline.GetComponent<MeshFilter>().sharedMesh);
+            Refresh();
         }
 
-        // Adds or removes the outline material on every target renderer.
+        // Asks for the outline (e.g. the tool of the current step); it only shows while the tool is not held.
         public void SetHighlighted(bool highlighted)
         {
-            if (highlighted == isHighlighted || outlineMaterial == null)
-                return;
+            requested = highlighted;
+            Refresh();
+        }
 
-            isHighlighted = highlighted;
+        void HandleHoldChanged(XiloTool _)
+        {
+            Refresh();
+        }
+
+        void Refresh()
+        {
+            bool visible = requested && outlineMaterial != null && !(tool != null && tool.IsHeld);
+            foreach (MeshRenderer outline in outlines)
+                outline.enabled = visible;
+        }
+
+        // One hidden twin per mesh renderer, sharing its mesh and following it as a child.
+        void CreateOutlines()
+        {
             foreach (Renderer target in targetRenderers)
             {
-                if (target == null)
+                if (target == null || !target.TryGetComponent(out MeshFilter filter) || filter.sharedMesh == null)
                     continue;
 
-                var materials = new List<Material>(target.sharedMaterials);
-                if (highlighted)
-                    materials.Add(outlineMaterial);
-                else
-                    materials.Remove(outlineMaterial);
-                target.sharedMaterials = materials.ToArray();
+                var twin = new GameObject($"{target.name}_Outline");
+                twin.transform.SetParent(target.transform, false);
+                twin.layer = target.gameObject.layer;
+                twin.AddComponent<MeshFilter>().sharedMesh = filter.sharedMesh;
+
+                var outline = twin.AddComponent<MeshRenderer>();
+                outline.sharedMaterials = OutlineMaterials(filter.sharedMesh);
+                outline.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                outline.receiveShadows = false;
+                outline.enabled = false;
+                outlines.Add(outline);
             }
         }
 
-        void OnDestroy()
+        Material[] OutlineMaterials(Mesh mesh)
         {
-            SetHighlighted(false);
+            return Enumerable.Repeat(outlineMaterial, Mathf.Max(1, mesh.subMeshCount)).ToArray();
         }
     }
 }
