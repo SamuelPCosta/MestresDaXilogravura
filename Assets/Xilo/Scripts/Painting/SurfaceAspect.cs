@@ -11,6 +11,19 @@ namespace Xilo.Painting
         {
             aspect = 1f;
             size = Vector2.zero;
+            if (!TryMeasureAxes(filter, out Vector3 perU, out Vector3 perV))
+                return false;
+
+            size = new Vector2(perU.magnitude, perV.magnitude);
+            aspect = size.y / size.x;
+            return true;
+        }
+
+        // World displacement (meters) of one UV unit along U and along V, expressed without the object rotation
+        // (use transform.InverseTransformDirection to bring world directions into this space).
+        public static bool TryMeasureAxes(MeshFilter filter, out Vector3 perU, out Vector3 perV)
+        {
+            perU = perV = Vector3.zero;
             Mesh mesh = filter != null ? filter.sharedMesh : null;
             if (mesh == null)
                 return false;
@@ -34,13 +47,9 @@ namespace Xilo.Painting
                     continue;
 
                 // Position derivatives along U and V (the classic tangent/bitangent solve).
-                Vector3 perU = (e1 * d2.y - e2 * d1.y) / determinant;
-                Vector3 perV = (e2 * d1.x - e1 * d2.x) / determinant;
-                size = new Vector2(perU.magnitude, perV.magnitude);
-                if (size.x <= 0f)
-                    return false;
-                aspect = size.y / size.x;
-                return true;
+                perU = (e1 * d2.y - e2 * d1.y) / determinant;
+                perV = (e2 * d1.x - e1 * d2.x) / determinant;
+                return perU.sqrMagnitude > 0f && perV.sqrMagnitude > 0f;
             }
             return false;
         }

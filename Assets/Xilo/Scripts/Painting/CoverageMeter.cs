@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -12,6 +13,8 @@ namespace Xilo.Painting
     public sealed class CoverageMeter : MonoBehaviour
     {
         const string LogCategory = "Coverage";
+        // Below this share of the surface a dynamic target is treated as empty.
+        const float MinTargetFraction = 0.005f;
 
         [SerializeField] Workbench workbench;
         [SerializeField] int resolution = 128;
@@ -167,19 +170,34 @@ namespace Xilo.Painting
             int version = trackingVersion;
             ReadMask(carveMask, version, carve =>
             {
+                bool[] uncarved = CoverageCalculator.BuildUnpaintedTarget(carve);
                 if (target == CoverageTarget.Uncarved)
                 {
-                    StoreDynamicTarget(target, CoverageCalculator.BuildUnpaintedTarget(carve));
+                    StoreDynamicTarget(target, uncarved);
                     return;
                 }
-                ReadMask(inkMask, version, ink => StoreDynamicTarget(target, CoverageCalculator.BuildInkedTarget(ink, carve)));
+                ReadMask(inkMask, version, ink => StoreDynamicTarget(target, CoverageCalculator.BuildInkedTarget(ink, carve), uncarved));
             });
         }
 
-        void StoreDynamicTarget(CoverageTarget target, bool[] values)
+        // An empty target would count as already complete (nothing left to cover) and unlock the step at once,
+        // e.g. pressing a sheet over a matrix that got no ink. Falls back to a bigger area instead.
+        void StoreDynamicTarget(CoverageTarget target, bool[] values, params bool[][] fallbacks)
         {
-            targets[target] = values;
-            XiloLog.Info(LogCategory, $"{target} target built: {CountTrue(values) * 100f / values.Length:0.#}% of the surface", this);
+            bool[] chosen = values;
+            foreach (bool[] fallback in fallbacks.Append(targets[CoverageTarget.FullSurface]))
+            {
+                if (CountTrue(chosen) >= chosen.Length * MinTargetFraction)
+                    break;
+                chosen = fallback;
+            }
+
+            targets[target] = chosen;
+            float percent = CountTrue(chosen) * 100f / chosen.Length;
+            if (chosen == values)
+                XiloLog.Info(LogCategory, $"{target} target built: {percent:0.#}% of the surface", this);
+            else
+                XiloLog.Warn(LogCategory, $"{target} target was (almost) empty, using a fallback area: {percent:0.#}% of the surface", this);
         }
 
         // Downscales a mask and reads it back; the callback gets a copy (null-safe, ignored if tracking changed).

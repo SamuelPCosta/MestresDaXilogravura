@@ -29,9 +29,22 @@ namespace Xilo.Painting
         [SerializeField] List<MaskBinding> masks = new();
 
         Material materialInstance;
+        Vector3 metersPerU = Vector3.right;
+        Vector3 metersPerV = Vector3.up;
 
         public SurfaceId Id => id;
         public Material Material => materialInstance;
+
+        // World length (meters) of one UV unit along U and along V; used to give brushes a real size.
+        public Vector2 MetersPerUv => new(metersPerU.magnitude, metersPerV.magnitude);
+
+        // Direction in UV space of a world direction lying on the surface (not normalized).
+        public Vector2 WorldToUvDirection(Vector3 worldDirection)
+        {
+            Vector3 local = targetRenderer.transform.InverseTransformDirection(worldDirection);
+            return new Vector2(Vector3.Dot(local, metersPerU) / metersPerU.sqrMagnitude,
+                               Vector3.Dot(local, metersPerV) / metersPerV.sqrMagnitude);
+        }
 
         public static bool TryGet(Collider collider, out PaintableSurface surface) =>
             SurfacesByCollider.TryGetValue(collider, out surface);
@@ -51,6 +64,12 @@ namespace Xilo.Painting
             }
 
             materialInstance = targetRenderer.material;
+            if (!SurfaceAspect.TryMeasureAxes(targetRenderer.GetComponent<MeshFilter>(), out metersPerU, out metersPerV))
+            {
+                metersPerU = Vector3.right;
+                metersPerV = Vector3.up;
+                XiloLog.Warn(LogCategory, $"{name}: UV size not measurable, brushes in meters assume 1 m per UV unit", this);
+            }
             BindMasks();
             ClearOwnedMasks();
         }

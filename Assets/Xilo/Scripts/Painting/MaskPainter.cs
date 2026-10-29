@@ -72,6 +72,47 @@ namespace Xilo.Painting
             Draw(mask, brush.StampTexture, toUv, new Vector2(size, size), 0f);
         }
 
+        public void StampSized(RenderTexture mask, BrushProfile brush, Vector2 uv, Vector2 uvSize, float angle)
+        {
+            if (CanDraw(mask, brush))
+                Draw(mask, brush.StampTexture, uv, uvSize, angle);
+        }
+
+        // Round stroke with an explicit UV size: a circle in meters becomes an ellipse in UV when the surface
+        // UV unit is not square. The line width is the ellipse diameter across the stroke.
+        public void LineSized(RenderTexture mask, BrushProfile brush, Vector2 fromUv, Vector2 toUv, Vector2 uvSize)
+        {
+            if (!CanDraw(mask, brush))
+                return;
+
+            Vector2 direction = toUv - fromUv;
+            float length = direction.magnitude;
+            if (length > brush.MinStrokeDistance)
+            {
+                float angle = Mathf.Atan2(direction.y, direction.x);
+                Vector2 across = new(-direction.y / length, direction.x / length);
+                float width = 1f / Mathf.Sqrt(Square(across.x / uvSize.x) + Square(across.y / uvSize.y));
+                Draw(mask, brush.LineTexture, (fromUv + toUv) * 0.5f, new Vector2(length, width), angle);
+            }
+
+            Draw(mask, brush.StampTexture, toUv, uvSize, 0f);
+        }
+
+        // Rectangle stamps (x = along the angle) from one UV point to another, close enough to form a band.
+        public void Sweep(RenderTexture mask, BrushProfile brush, Vector2 fromUv, Vector2 toUv, Vector2 uvSize, float angle, float spacingUv)
+        {
+            float distance = Vector2.Distance(fromUv, toUv);
+            int steps = Mathf.Clamp(Mathf.CeilToInt(distance / Mathf.Max(1e-5f, spacingUv)), 1, maxStampsPerFrame);
+            for (int i = 1; i <= steps; i++)
+            {
+                if (!CanDraw(mask, brush))
+                    return;
+                Draw(mask, brush.StampTexture, Vector2.Lerp(fromUv, toUv, i / (float)steps), uvSize, angle);
+            }
+        }
+
+        static float Square(float value) => value * value;
+
         public void Clear(RenderTexture mask)
         {
             FillWith(mask, Color.clear);
