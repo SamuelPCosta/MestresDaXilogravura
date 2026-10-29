@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Xilo.Core;
 
@@ -21,6 +22,9 @@ namespace Xilo.UI
         [SerializeField] Button showResultButton;
         [SerializeField] Button saveButton;
         [SerializeField] Button restartButton;
+        [Tooltip("Back to the menu scene; shown only together with Save (after the reveal).")]
+        [SerializeField] Button exitButton;
+        [SerializeField] string menuScene = "Menu";
 
         [Header("Feedback")]
         [SerializeField, Tooltip("Plays when Next (or Show result) goes from disabled to enabled.")] AudioSource feedbackAudio;
@@ -31,6 +35,7 @@ namespace Xilo.UI
 
         StepId currentStep;
         bool advanceEnabled;
+        bool isLeaving;
 
         void Awake()
         {
@@ -47,6 +52,8 @@ namespace Xilo.UI
             Bind(showResultButton, flow.PerformStepAction);
             Bind(saveButton, RequestSave);
             Bind(restartButton, flow.Restart);
+            Bind(exitButton, ExitToMenu);
+            SetVisible(exitButton, false);
         }
 
         void OnEnable()
@@ -74,6 +81,7 @@ namespace Xilo.UI
             SetVisible(placeSheetButton, currentStep == StepId.PaperPlacement);
             SetVisible(showResultButton, currentStep == StepId.Pressing);
             SetVisible(saveButton, currentStep == StepId.Reveal);
+            SetVisible(exitButton, currentStep == StepId.Reveal);
             SetVisible(restartButton, true);
             SetVisible(backButton, true);
             RefreshGroups();
@@ -114,6 +122,25 @@ namespace Xilo.UI
         {
             XiloLog.Info(LogCategory, "Save requested", this);
             OnSaveRequested.Invoke();
+        }
+
+        // Loads the menu once, ignoring repeated clicks while it loads.
+        void ExitToMenu()
+        {
+            if (isLeaving)
+                return;
+
+            try
+            {
+                isLeaving = true;
+                XiloLog.Info(LogCategory, $"Leaving to {menuScene}", this);
+                SceneManager.LoadSceneAsync(menuScene);
+            }
+            catch (Exception exception)
+            {
+                isLeaving = false;
+                XiloLog.Exception(LogCategory, exception, this);
+            }
         }
 
         static void Bind(Button button, UnityAction action)
