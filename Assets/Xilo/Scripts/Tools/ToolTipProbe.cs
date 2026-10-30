@@ -37,6 +37,9 @@ namespace Xilo.Tools
 
         [Header("Samples and surfaces")]
         [SerializeField] Transform[] tipSamples;
+
+        // Points that touch and paint (the tool tip when none are set).
+        public System.Collections.Generic.IReadOnlyList<Transform> Samples => tipSamples;
         [SerializeField] LayerMask surfaceMask;
         [SerializeField] bool requireActiveStep = true;
         [SerializeField] bool logContacts = true;
