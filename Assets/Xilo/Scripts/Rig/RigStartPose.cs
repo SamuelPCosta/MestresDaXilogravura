@@ -9,9 +9,9 @@ using Xilo.Core;
 namespace Xilo.Rig
 {
     // Restores the Camera Offset pose authored in the scene after XROrigin applies its own height.
-    // In the Editor (simulator) the full pose is kept, including pitch. On a real headset the pitch
-    // and authored height are dropped to avoid tilting the horizon and doubling the tracked height; the floor
-    // origin is forced so the camera sits at the visitor's real head height (DeskHeightCalibrator relies on it).
+    // The offset is always kept level: in the Editor the authored pitch is handed to the simulated head
+    // (EditorOnlySimulator); on a real headset the authored height is dropped to avoid doubling the tracked height,
+    // and the floor origin is forced so the camera sits at the visitor's real head height (HeadHeightAnchor relies on it).
     // Then the rig is turned and slid so the visitor starts where the scene camera was, facing the same way
     // (the desk, the menu), wherever they stand in the room. Repeated after a system recenter.
     [DefaultExecutionOrder(1000)]
@@ -34,6 +34,9 @@ namespace Xilo.Rig
         Vector3 startPoint;
         float startYaw;
         readonly List<XRInputSubsystem> inputSubsystems = new();
+
+        // Downward look authored on the Camera Offset (degrees, positive = down); the Editor simulator starts the head with it.
+        public float AuthoredPitch => Mathf.DeltaAngle(0f, authoredRotation.eulerAngles.x);
 
         void Awake()
         {
@@ -90,8 +93,10 @@ namespace Xilo.Rig
         {
             if (Application.isEditor)
             {
+                // Kept level: the simulator moves the head on the plane of the camera's parent, so a pitched
+                // offset would turn walking into a diagonal. The authored pitch goes to the simulated head instead.
                 cameraOffset.localPosition = authoredPosition;
-                cameraOffset.localRotation = authoredRotation;
+                cameraOffset.localRotation = Quaternion.Euler(0f, authoredRotation.eulerAngles.y, 0f);
             }
             else
             {

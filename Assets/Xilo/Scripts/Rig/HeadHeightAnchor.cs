@@ -20,7 +20,9 @@ namespace Xilo.Rig
         [SerializeField] Transform trackedCamera;
         [FormerlySerializedAs("desk")]
         [SerializeField] Transform target;
-        [Tooltip("Target origin height below the camera (meters). 0 = at eye level.")]
+        [Tooltip("Keep the camera-to-target height of the scene layout (measured on Play). Off = use Distance Below Camera.")]
+        [SerializeField] bool useSceneDistance = true;
+        [Tooltip("Target origin height below the camera (meters). 0 = at eye level. Ignored while Use Scene Distance is on.")]
         [SerializeField] float distanceBelowCamera = 1.15f;
         [Tooltip("Head heights below this are treated as not tracked yet.")]
         [SerializeField] float minTrackedHeight = 0.5f;
@@ -30,6 +32,15 @@ namespace Xilo.Rig
         [SerializeField] List<Transform> keepInPlace = new();
 
         readonly List<XRInputSubsystem> inputSubsystems = new();
+
+        // Reads the authored layout before the rig applies any tracked height (XROrigin moves the camera on Start).
+        void Awake()
+        {
+            if (!useSceneDistance || trackedCamera == null || target == null)
+                return;
+            distanceBelowCamera = trackedCamera.position.y - target.position.y;
+            XiloLog.Info(LogCategory, $"{target.name} keeps the scene distance: {distanceBelowCamera:F3} m below the camera", this);
+        }
 
         void OnEnable()
         {
