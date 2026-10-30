@@ -1,5 +1,8 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
@@ -85,6 +88,7 @@ namespace Xilo.UI
             SetVisible(restartButton, true);
             SetVisible(backButton, true);
             RefreshGroups();
+            RebuildButtonLayouts();
 
             if (backButton != null)
                 backButton.interactable = flow.CanGoBack;
@@ -176,6 +180,34 @@ namespace Xilo.UI
         IEnumerable<Button> AllButtons()
         {
             return new[] { backButton, nextButton, placeSheetButton, showResultButton, saveButton, restartButton };
+        }
+
+        // Buttons shown for the first time (e.g. Place sheet) get laid out before their label has measured itself,
+        // so the icon ends up under the text. Measures the labels and rebuilds the icon+text layout now and next frame.
+        void RebuildButtonLayouts()
+        {
+            RebuildVisibleButtons();
+            if (isActiveAndEnabled)
+                StartCoroutine(RebuildNextFrame());
+        }
+
+        IEnumerator RebuildNextFrame()
+        {
+            yield return null;
+            RebuildVisibleButtons();
+        }
+
+        void RebuildVisibleButtons()
+        {
+            foreach (Button button in AllButtons().Append(exitButton))
+            {
+                if (!IsShown(button))
+                    continue;
+                foreach (TMP_Text label in button.GetComponentsInChildren<TMP_Text>())
+                    label.ForceMeshUpdate();
+                foreach (LayoutGroup layout in button.GetComponentsInChildren<LayoutGroup>())
+                    LayoutRebuilder.ForceRebuildLayoutImmediate((RectTransform)layout.transform);
+            }
         }
 
         static void SetVisible(Button button, bool visible)

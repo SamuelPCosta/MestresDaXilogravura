@@ -57,9 +57,12 @@ namespace Xilo.UI
             Align(onEmpty.rectTransform);
         }
 
+        // The bar (with its labels inside) is hidden while the art is being chosen.
         void HandleStepEntered(StepDefinition definition)
         {
             currentTitle = definition != null ? definition.Title : string.Empty;
+            if (slider != null)
+                slider.gameObject.SetActive(definition == null || definition.Id != StepId.ArtSelection);
             HandleProgress(0f);
         }
 
