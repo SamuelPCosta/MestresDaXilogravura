@@ -53,8 +53,8 @@ namespace Xilo.Painting
             return result;
         }
 
-        // Fraction (0..1) of target pixels whose mask red channel is painted.
-        public static float Compute(ReadOnlySpan<byte> maskRgba, bool[] target)
+        // Fraction (0..1) of target pixels whose mask red channel is painted (at or above the threshold).
+        public static float Compute(ReadOnlySpan<byte> maskRgba, bool[] target, byte paintedThreshold = PaintedThreshold)
         {
             if (target == null || target.Length == 0)
                 return 0f;
@@ -67,7 +67,7 @@ namespace Xilo.Painting
                 if (!target[i])
                     continue;
                 targetCount++;
-                if (maskRgba[i * 4] >= PaintedThreshold)
+                if (maskRgba[i * 4] >= paintedThreshold)
                     paintedCount++;
             }
 

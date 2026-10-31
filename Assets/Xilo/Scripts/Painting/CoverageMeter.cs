@@ -30,6 +30,7 @@ namespace Xilo.Painting
         readonly Dictionary<CoverageTarget, bool[]> targets = new();
         RenderTexture sampleTexture;
         RenderTexture trackedMask;
+        byte trackedThreshold = CoverageCalculator.PaintedThreshold;
         CoverageTarget trackedTarget;
         Action<float> onCoverage;
         float nextSampleTime;
@@ -61,8 +62,10 @@ namespace Xilo.Painting
                 sampleTexture.Release();
         }
 
-        public void Track(RenderTexture mask, CoverageTarget target, Action<float> callback)
+        // paintedThreshold: mask value (0..255) from which a pixel counts as painted (faint strokes may count less).
+        public void Track(RenderTexture mask, CoverageTarget target, Action<float> callback, byte paintedThreshold = CoverageCalculator.PaintedThreshold)
         {
+            trackedThreshold = paintedThreshold;
             trackedMask = mask;
             trackedTarget = target;
             onCoverage = callback;
@@ -128,7 +131,7 @@ namespace Xilo.Painting
                     return;
 
                 NativeArray<byte> data = request.GetData<byte>();
-                float coverage = CoverageCalculator.Compute(data.AsReadOnlySpan(), target);
+                float coverage = CoverageCalculator.Compute(data.AsReadOnlySpan(), target, trackedThreshold);
                 onCoverage.Invoke(coverage);
             }
             catch (Exception exception)

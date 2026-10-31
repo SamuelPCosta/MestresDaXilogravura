@@ -14,6 +14,9 @@ namespace Xilo.Painting
         [SerializeField, Tooltip("Limits for the user-chosen brush size multiplier.")]
         Vector2 brushScaleRange = new(0.25f, 5f);
 
+        const int FadeLevels = 16;
+
+        readonly System.Collections.Generic.Dictionary<(Texture2D, int), Texture2D> fadedBrushes = new();
         Material material;
         int stampsThisFrame;
         int lastFrame = -1;
@@ -34,6 +37,8 @@ namespace Xilo.Painting
         {
             if (material != null)
                 Destroy(material);
+            foreach (Texture2D faded in fadedBrushes.Values)
+                Destroy(faded);
         }
 
         // Multiplier chosen by the user (brush size slider); applied by callers that opt in.
@@ -45,17 +50,17 @@ namespace Xilo.Painting
             XiloLog.Info(LogCategory, $"Brush scale: {BrushScale:0.##}x", this);
         }
 
-        public void Stamp(RenderTexture mask, BrushProfile brush, Vector2 uv, float sizeScale = 1f)
+        public void Stamp(RenderTexture mask, BrushProfile brush, Vector2 uv, float sizeScale = 1f, float white = 1f)
         {
             if (!CanDraw(mask, brush))
                 return;
 
             float size = brush.Size * sizeScale;
-            Draw(mask, brush.StampTexture, uv, new Vector2(size, size), 0f);
+            Draw(mask, Faded(brush.StampTexture, white), uv, new Vector2(size, size), 0f);
         }
 
         // Fills the gap between two UV samples with a rotated line plus a stamp at the end.
-        public void Line(RenderTexture mask, BrushProfile brush, Vector2 fromUv, Vector2 toUv, float sizeScale = 1f)
+        public void Line(RenderTexture mask, BrushProfile brush, Vector2 fromUv, Vector2 toUv, float sizeScale = 1f, float white = 1f)
         {
             if (!CanDraw(mask, brush))
                 return;
@@ -66,21 +71,22 @@ namespace Xilo.Painting
             if (length > brush.MinStrokeDistance)
             {
                 float angle = Mathf.Atan2(direction.y, direction.x);
-                Draw(mask, brush.LineTexture, (fromUv + toUv) * 0.5f, new Vector2(length, size), angle);
+                Draw(mask, Faded(brush.LineTexture, white), (fromUv + toUv) * 0.5f, new Vector2(length, size), angle);
             }
 
-            Draw(mask, brush.StampTexture, toUv, new Vector2(size, size), 0f);
+            if (!brush.FlatStroke)
+                Draw(mask, Faded(brush.StampTexture, white), toUv, new Vector2(size, size), 0f);
         }
 
-        public void StampSized(RenderTexture mask, BrushProfile brush, Vector2 uv, Vector2 uvSize, float angle)
+        public void StampSized(RenderTexture mask, BrushProfile brush, Vector2 uv, Vector2 uvSize, float angle, float white = 1f)
         {
             if (CanDraw(mask, brush))
-                Draw(mask, brush.StampTexture, uv, uvSize, angle);
+                Draw(mask, Faded(brush.StampTexture, white), uv, uvSize, angle);
         }
 
         // Round stroke with an explicit UV size: a circle in meters becomes an ellipse in UV when the surface
         // UV unit is not square. The line width is the ellipse diameter across the stroke.
-        public void LineSized(RenderTexture mask, BrushProfile brush, Vector2 fromUv, Vector2 toUv, Vector2 uvSize)
+        public void LineSized(RenderTexture mask, BrushProfile brush, Vector2 fromUv, Vector2 toUv, Vector2 uvSize, float white = 1f)
         {
             if (!CanDraw(mask, brush))
                 return;
@@ -92,10 +98,11 @@ namespace Xilo.Painting
                 float angle = Mathf.Atan2(direction.y, direction.x);
                 Vector2 across = new(-direction.y / length, direction.x / length);
                 float width = 1f / Mathf.Sqrt(Square(across.x / uvSize.x) + Square(across.y / uvSize.y));
-                Draw(mask, brush.LineTexture, (fromUv + toUv) * 0.5f, new Vector2(length, width), angle);
+                Draw(mask, Faded(brush.LineTexture, white), (fromUv + toUv) * 0.5f, new Vector2(length, width), angle);
             }
 
-            Draw(mask, brush.StampTexture, toUv, uvSize, 0f);
+            if (!brush.FlatStroke)
+                Draw(mask, Faded(brush.StampTexture, white), toUv, uvSize, 0f);
         }
 
         // Rectangle stamps (x = along the angle) from one UV point to another, close enough to form a band.
@@ -112,6 +119,52 @@ namespace Xilo.Painting
         }
 
         static float Square(float value) => value * value;
+
+        // The draw shader lerps the mask towards white by the brush alpha, so a fainter stroke is a brush with lower
+        // alpha. Copies of the brush at FadeLevels alpha steps are made once (read back from the GPU, so the brush
+        // texture doesn't need Read/Write) and reused.
+        Texture Faded(Texture2D source, float white)
+        {
+            int level = Mathf.Clamp(Mathf.RoundToInt(white * FadeLevels), 1, FadeLevels);
+            if (level == FadeLevels || source == null)
+                return source;
+
+            var key = (source, level);
+            if (fadedBrushes.TryGetValue(key, out Texture2D cached))
+                return cached;
+
+            Texture2D faded = MakeFaded(source, level / (float)FadeLevels);
+            fadedBrushes[key] = faded;
+            return faded;
+        }
+
+        static Texture2D MakeFaded(Texture2D source, float alphaScale)
+        {
+            RenderTexture temp = RenderTexture.GetTemporary(source.width, source.height, 0, RenderTextureFormat.ARGB32, RenderTextureReadWrite.Linear);
+            RenderTexture previous = RenderTexture.active;
+            try
+            {
+                Graphics.Blit(source, temp);
+                RenderTexture.active = temp;
+                var copy = new Texture2D(source.width, source.height, TextureFormat.RGBA32, false, true)
+                {
+                    name = $"{source.name} x{alphaScale:0.##}",
+                    wrapMode = TextureWrapMode.Clamp,
+                };
+                copy.ReadPixels(new Rect(0, 0, source.width, source.height), 0, 0);
+                Color32[] pixels = copy.GetPixels32();
+                for (int i = 0; i < pixels.Length; i++)
+                    pixels[i].a = (byte)(pixels[i].a * alphaScale);
+                copy.SetPixels32(pixels);
+                copy.Apply(false, true);
+                return copy;
+            }
+            finally
+            {
+                RenderTexture.active = previous;
+                RenderTexture.ReleaseTemporary(temp);
+            }
+        }
 
         public void Clear(RenderTexture mask)
         {

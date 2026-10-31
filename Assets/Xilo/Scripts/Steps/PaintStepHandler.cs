@@ -19,6 +19,10 @@ namespace Xilo.Steps
         [SerializeField] BrushProfile brush;
 
         readonly Dictionary<int, Vector2> lastUvBySample = new();
+        readonly Dictionary<int, Vector3> lastPointBySample = new();
+        readonly Dictionary<int, float> lastWhiteBySample = new();
+        readonly Dictionary<int, Vector2> smoothedUvBySample = new();
+        Vector2 paintedUv;
         XiloTool tool;
         ToolTipProbe probe;
         PaintableSurface surface;
@@ -39,7 +43,7 @@ namespace Xilo.Steps
 
             probe.Contact += HandleContact;
             probe.ContactLost += HandleContactLost;
-            coverageMeter.Track(mask, Definition.CoverageTarget, HandleCoverage);
+            coverageMeter.Track(mask, Definition.CoverageTarget, HandleCoverage, brush.PaintedThreshold);
             lastLoggedDecile = -1;
             ReportCanAdvance(false);
         }
@@ -54,6 +58,9 @@ namespace Xilo.Steps
             coverageMeter?.Stop();
             tool?.EndUse();
             lastUvBySample.Clear();
+            lastPointBySample.Clear();
+            lastWhiteBySample.Clear();
+            smoothedUvBySample.Clear();
             lastRectangleUv = null;
         }
 
@@ -63,6 +70,9 @@ namespace Xilo.Steps
             if (target != null && painter != null)
                 painter.Clear(target);
             lastUvBySample.Clear();
+            lastPointBySample.Clear();
+            lastWhiteBySample.Clear();
+            smoothedUvBySample.Clear();
             lastRectangleUv = null;
             lastLoggedDecile = -1;
             ReportProgress(0f);
@@ -92,35 +102,82 @@ namespace Xilo.Steps
             if (!CanPaint())
                 return;
 
+            tool.BeginUse(contact.Point);
             if (brush.IsRectangle)
                 PaintRectangle(contact);
-            else
-                PaintRound(contact);
+            else if (!PaintRound(contact))
+                return;
 
-            lastUvBySample[contact.SampleIndex] = contact.Uv;
-            tool.BeginUse(contact.Point);
+            lastUvBySample[contact.SampleIndex] = brush.IsRectangle ? contact.Uv : paintedUv;
         }
 
-        // Round brush per probe sample: legacy UV size, or a real size in meters converted for this surface.
-        void PaintRound(ToolContact contact)
+        // Brush per probe sample: legacy UV size, or a real size in meters converted for this surface.
+        // A tool resting in place paints nothing (returns false): stamping the same spot over and over would keep
+        // whitening a faint stroke.
+        bool PaintRound(ToolContact contact)
         {
             float scale = brush.UserScalable ? painter.BrushScale : 1f;
             bool continues = lastUvBySample.TryGetValue(contact.SampleIndex, out Vector2 lastUv);
+            Vector2 uv = SmoothedUv(contact, continues);
+            if (continues && Vector2.Distance(lastUv, uv) <= brush.MinStrokeDistance)
+                return false;
+            float white = brush.Directional ? StrokeWhite(contact) : 1f;
 
             if (!brush.InMeters)
             {
                 if (continues)
-                    painter.Line(mask, brush, lastUv, contact.Uv, scale);
+                    painter.Line(mask, brush, lastUv, uv, scale, white);
                 else
-                    painter.Stamp(mask, brush, contact.Uv, scale);
-                return;
+                    painter.Stamp(mask, brush, uv, scale, white);
+                paintedUv = uv;
+                return true;
             }
 
             Vector2 uvSize = MetersToUv(brush.SizeMeters * scale);
             if (continues)
-                painter.LineSized(mask, brush, lastUv, contact.Uv, uvSize);
+                painter.LineSized(mask, brush, lastUv, uv, uvSize, white);
             else
-                painter.StampSized(mask, brush, contact.Uv, uvSize, 0f);
+                painter.StampSized(mask, brush, uv, uvSize, 0f, white);
+            paintedUv = uv;
+            return true;
+        }
+
+        // Low-pass filter on the tip path (per probe sample), so hand tremor doesn't kink the stroke at every step.
+        Vector2 SmoothedUv(ToolContact contact, bool continues)
+        {
+            int sample = contact.SampleIndex;
+            Vector2 smoothed = continues && smoothedUvBySample.TryGetValue(sample, out Vector2 previous)
+                ? Vector2.Lerp(previous, contact.Uv, 1f - brush.PathSmoothing)
+                : contact.Uv;
+            smoothedUvBySample[sample] = smoothed;
+            return smoothed;
+        }
+
+        // Directional brushes (the gouge): full white for strokes going up the surface, fainter sideways or downward.
+        // "Up" is the slope of the surface away from the visitor (world up projected on it). A tool resting in place
+        // keeps the white of its last stroke.
+        float StrokeWhite(ToolContact contact)
+        {
+            int sample = contact.SampleIndex;
+            // The first touch has no direction yet: it marks faint until the stroke shows where it goes.
+            float white = lastWhiteBySample.TryGetValue(sample, out float last) ? last : brush.WhiteForAngle(90f);
+            if (lastPointBySample.TryGetValue(sample, out Vector3 lastPoint))
+            {
+                Vector3 motion = Vector3.ProjectOnPlane(contact.Point - lastPoint, contact.Normal);
+                if (motion.sqrMagnitude > 1e-8f)
+                    white = brush.WhiteForAngle(Vector3.Angle(motion, SurfaceUp(contact.Normal)));
+            }
+            lastPointBySample[sample] = contact.Point;
+            lastWhiteBySample[sample] = white;
+            return white;
+        }
+
+        static Vector3 SurfaceUp(Vector3 normal)
+        {
+            Vector3 up = Vector3.ProjectOnPlane(Vector3.up, normal);
+            if (up.sqrMagnitude < 1e-4f && Camera.main != null)
+                up = Vector3.ProjectOnPlane(Camera.main.transform.forward, normal);
+            return up.normalized;
         }
 
         // One rectangle for the whole tool (e.g. the roller band), aligned with its axle and swept from the last
@@ -161,6 +218,9 @@ namespace Xilo.Steps
         void HandleContactLost(int sampleIndex)
         {
             lastUvBySample.Remove(sampleIndex);
+            lastPointBySample.Remove(sampleIndex);
+            lastWhiteBySample.Remove(sampleIndex);
+            smoothedUvBySample.Remove(sampleIndex);
             if (lastUvBySample.Count > 0)
                 return;
             lastRectangleUv = null;
