@@ -1,11 +1,12 @@
 using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using Xilo.Core;
 
 namespace Xilo.UI
 {
-    // Browses the art catalog (previous/next) and raises ArtChosen when the user confirms.
+    // Browses the art catalog (previous/next), showing "current/total", and raises ArtChosen when the user confirms.
     // Kept independent from the flow so it can later be replaced by the "notebook" selector.
     public sealed class ArtSelectionPanel : MonoBehaviour
     {
@@ -16,6 +17,8 @@ namespace Xilo.UI
         [SerializeField] Button previousButton;
         [SerializeField] Button nextButton;
         [SerializeField] Button chooseButton;
+        [Tooltip("Shows \"current/total\" (e.g. 2/5).")]
+        [SerializeField] TMP_Text counter;
 
         int index;
 
@@ -52,6 +55,8 @@ namespace Xilo.UI
         {
             index = newIndex;
             preview.sprite = catalog.Arts[index].sprite;
+            if (counter != null)
+                counter.text = $"{index + 1}/{catalog.Count}";
         }
     }
 }
