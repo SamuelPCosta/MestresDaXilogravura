@@ -25,11 +25,23 @@ namespace Xilo.Objects
 
         public PoseTween Tween => tween != null ? tween : tween = GetComponent<PoseTween>();
 
+        // Raised as the sheet starts turning over, and when it is put back (Back/Restart).
+        public event System.Action RevealStarted;
+        public event System.Action RevealCleared;
+
         // Turns the sheet over in place (legacy "resultado" motion) with its sound.
         public void Reveal(System.Action onCompleted = null)
         {
             PlayRevealSound();
+            RevealStarted?.Invoke();
             Tween.Play(FlipPose(), flipDuration, onCompleted);
+        }
+
+        // Puts the turned sheet back in the given pose at once.
+        public void ClearReveal(Vector3 position, Quaternion rotation)
+        {
+            Tween.Snap(position, rotation);
+            RevealCleared?.Invoke();
         }
 
         // Rotation around the in-plane axis, lifted along the normal that points away from the desk.

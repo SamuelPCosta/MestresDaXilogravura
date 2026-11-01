@@ -44,7 +44,7 @@ namespace Xilo.Steps
             if (!isRevealed || paper == null)
                 return;
             isRevealed = false;
-            paper.Tween.Snap(preRevealPosition, preRevealRotation);
+            paper.ClearReveal(preRevealPosition, preRevealRotation);
             ReportProgress(0f);
         }
 
