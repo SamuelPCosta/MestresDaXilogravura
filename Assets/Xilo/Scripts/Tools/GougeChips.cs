@@ -41,6 +41,14 @@ namespace Xilo.Tools
         [Tooltip("Random spin while falling (degrees per second).")]
         [SerializeField] float maxSpin = 360f;
 
+        [Header("Break sound")]
+        [Tooltip("Short crack played when a chip breaks off (a random one of the list). Empty = silent.")]
+        [SerializeField] List<AudioClip> breakClips = new();
+        [SerializeField] AudioSource breakAudio;
+        [SerializeField, Range(0f, 1f)] float breakVolume = 0.6f;
+        [Tooltip("Random pitch range, so repeated cracks don't sound identical.")]
+        [SerializeField] Vector2 breakPitch = new(0.9f, 1.15f);
+
         sealed class FallingChip
         {
             public Transform transform;
@@ -201,6 +209,7 @@ namespace Xilo.Tools
             }
             else
             {
+                PlayBreak();
                 growing.SetParent(null, true);
                 falling.Add(new FallingChip
                 {
@@ -213,6 +222,18 @@ namespace Xilo.Tools
             growing = null;
             growingRenderers = null;
             reveal = 0f;
+        }
+
+        void PlayBreak()
+        {
+            if (breakAudio == null || breakClips.Count == 0)
+                return;
+
+            AudioClip clip = breakClips[Random.Range(0, breakClips.Count)];
+            if (clip == null)
+                return;
+            breakAudio.pitch = Random.Range(breakPitch.x, breakPitch.y);
+            breakAudio.PlayOneShot(clip, breakVolume);
         }
 
         void UpdateFalling()
