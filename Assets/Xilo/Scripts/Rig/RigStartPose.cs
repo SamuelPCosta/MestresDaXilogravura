@@ -38,6 +38,11 @@ namespace Xilo.Rig
         // Downward look authored on the Camera Offset (degrees, positive = down); the Editor simulator starts the head with it.
         public float AuthoredPitch => Mathf.DeltaAngle(0f, authoredRotation.eulerAngles.x);
 
+        // World spot the head is placed over (the scene camera's spot), and whether it has been placed there yet.
+        public Vector3 StartPoint => startPoint;
+        public bool IsPlaced { get; private set; }
+        public Transform Head => origin != null && origin.Camera != null ? origin.Camera.transform : null;
+
         void Awake()
         {
             if (origin == null)
@@ -86,6 +91,7 @@ namespace Xilo.Rig
             Apply();
             yield return WaitForTracking();
             Recenter();
+            IsPlaced = true;
         }
 
         // Re-applies the authored pose, adapting it when running on a real headset.
