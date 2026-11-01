@@ -57,12 +57,13 @@ namespace Xilo.UI
             Align(onEmpty.rectTransform);
         }
 
-        // The bar (with its labels inside) is hidden while the art is being chosen.
+        // The bar (with its labels inside) is hidden while the art is being chosen and at the reveal, where the
+        // exit button takes its place.
         void HandleStepEntered(StepDefinition definition)
         {
             currentTitle = definition != null ? definition.Title : string.Empty;
             if (slider != null)
-                slider.gameObject.SetActive(definition == null || definition.Id != StepId.ArtSelection);
+                slider.gameObject.SetActive(definition == null || definition.Id is not (StepId.ArtSelection or StepId.Reveal));
             HandleProgress(0f);
         }
 
