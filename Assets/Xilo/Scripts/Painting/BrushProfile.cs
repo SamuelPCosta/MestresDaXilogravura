@@ -1,10 +1,11 @@
 using UnityEngine;
+using Xilo.Core;
 
 namespace Xilo.Painting
 {
     // How a tool marks a mask. The size is either in UV units (legacy) or in meters, converted on each surface
-    // so the mark matches the tool whatever the surface UV scale. A length makes it a rectangle along a tool axis
-    // (e.g. the roller), swept by close stamps instead of round strokes.
+    // so the mark matches the tool whatever the surface UV scale (meters at the WorkbenchScale reference scale).
+    // A length makes it a rectangle along a tool axis (e.g. the roller), swept by close stamps instead of round strokes.
     [CreateAssetMenu(menuName = "Xilo/Brush Profile", fileName = "Brush_")]
     public sealed class BrushProfile : ScriptableObject
     {
@@ -45,8 +46,8 @@ namespace Xilo.Painting
         public Texture2D LineTexture => lineTexture != null ? lineTexture : stampTexture;
         public float Size => size;
         public float MinStrokeDistance => minStrokeDistance;
-        public float SizeMeters => sizeMeters;
-        public float LengthMeters => lengthMeters;
+        public float SizeMeters => WorkbenchScale.Meters(sizeMeters);
+        public float LengthMeters => WorkbenchScale.Meters(lengthMeters);
         public Vector3 ToolAxis => toolAxis;
         public float StampSpacing => stampSpacing;
         public bool UserScalable => userScalable;

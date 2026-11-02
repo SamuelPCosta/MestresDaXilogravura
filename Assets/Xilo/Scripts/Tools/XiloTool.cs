@@ -135,7 +135,7 @@ namespace Xilo.Tools
         // eases towards it so a jittery speed doesn't make the sound flutter, and falls to 0 when not in use.
         void UpdateLevel()
         {
-            float target = !isUsing ? 0f : followGesture ? Mathf.Clamp01(tipSpeed / fullSpeed) : 1f;
+            float target = !isUsing ? 0f : followGesture ? Mathf.Clamp01(tipSpeed / WorkbenchScale.Meters(fullSpeed)) : 1f;
             level = Mathf.Lerp(level, target, 1f - Mathf.Exp(-Time.deltaTime / responseTime));
             if (!isUsing && level < 0.005f)
                 level = 0f;

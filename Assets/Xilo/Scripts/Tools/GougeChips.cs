@@ -150,8 +150,8 @@ namespace Xilo.Tools
             if (growing == null)
                 return;
 
-            float speed = Mathf.Min(tipVelocity.magnitude, maxSpeed);
-            reveal = Mathf.Min(1f, reveal + speed * Time.deltaTime * revealPerMeter);
+            float speed = Mathf.Min(tipVelocity.magnitude, WorkbenchScale.Meters(maxSpeed));
+            reveal = Mathf.Min(1f, reveal + speed * Time.deltaTime * revealPerMeter / WorkbenchScale.Factor);
             SetProperties(growingRenderers, reveal, 1f);
             if (reveal >= breakAt)
                 BreakOff();
@@ -181,7 +181,7 @@ namespace Xilo.Tools
             growing.name = $"{prefab.name} (chip)";
             growing.SetLocalPositionAndRotation(positionOffset, Quaternion.Euler(rotationOffset) * prefab.transform.localRotation);
             Vector3 parentScale = tip.lossyScale;
-            Vector3 modelScale = prefab.transform.localScale * chipScale;
+            Vector3 modelScale = prefab.transform.localScale * (chipScale * WorkbenchScale.Factor);
             growing.localScale = new Vector3(modelScale.x / parentScale.x, modelScale.y / parentScale.y, modelScale.z / parentScale.z);
 
             growingRenderers = growing.GetComponentsInChildren<Renderer>();

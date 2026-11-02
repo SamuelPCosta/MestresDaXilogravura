@@ -72,7 +72,7 @@ namespace Xilo.Objects
         IEnumerator Hop(Transform item, Vector3 up, float delay)
         {
             Vector3 rest = restPositions[item];
-            float jumpHeight = height * (1f + Random.Range(-heightRandomness, heightRandomness));
+            float jumpHeight = WorkbenchScale.Meters(height) * (1f + Random.Range(-heightRandomness, heightRandomness));
             float jumpDuration = Mathf.Max(0.01f, duration * (1f + Random.Range(-durationRandomness, durationRandomness)));
             Vector3 localUp = item.parent != null ? item.parent.InverseTransformVector(up) : up;
 

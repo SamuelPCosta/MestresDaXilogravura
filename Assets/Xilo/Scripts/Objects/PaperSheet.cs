@@ -50,7 +50,7 @@ namespace Xilo.Objects
             Vector3 normal = Normal;
             if (Vector3.Dot(normal, Vector3.up) < 0f)
                 normal = -normal;
-            return Tween.SpinPose(transform.TransformDirection(flipLocalAxis), flipDegrees, normal * flipLift);
+            return Tween.SpinPose(transform.TransformDirection(flipLocalAxis), flipDegrees, normal * WorkbenchScale.Meters(flipLift));
         }
 
 #if UNITY_EDITOR

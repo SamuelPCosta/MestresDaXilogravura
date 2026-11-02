@@ -106,7 +106,7 @@ namespace Xilo.Steps
             {
                 if (item == null || item.IsMoving || (item.TryGetComponent(out XiloTool tool) && tool.IsHeld))
                     continue;
-                item.Bump(item.transform.up * makeRoomHeight, duration);
+                item.Bump(item.transform.up * WorkbenchScale.Meters(makeRoomHeight), duration);
             }
         }
 
@@ -135,7 +135,7 @@ namespace Xilo.Steps
             foreach (PoseTween item in makeRoom)
             {
                 if (item != null)
-                    item.Preview(item.BumpPose(item.transform.up * makeRoomHeight), paper.Tween.DefaultDuration, returns: false);
+                    item.Preview(item.BumpPose(item.transform.up * WorkbenchScale.Meters(makeRoomHeight)), paper.Tween.DefaultDuration, returns: false);
             }
         }
 #endif

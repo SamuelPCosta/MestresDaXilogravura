@@ -218,13 +218,13 @@ namespace Xilo.Steps
         bool TryGetPourHit(out RaycastHit hit)
         {
             Vector3 spout = pot.Tip.position;
-            if (!Physics.Raycast(spout, Vector3.down, out hit, maxPourDistance, glassMask, QueryTriggerInteraction.Ignore)
+            if (!Physics.Raycast(spout, Vector3.down, out hit, WorkbenchScale.Meters(maxPourDistance), glassMask, QueryTriggerInteraction.Ignore)
                 || !PaintableSurface.TryGet(hit.collider, out PaintableSurface touched) || touched != glass)
                 return false;
 
             float tilt = Vector3.Angle(pot.transform.up, hit.normal);
             float height = Vector3.Dot(spout - hit.point, hit.normal);
-            return tilt > pourAngle && height > minHeightAboveGlass;
+            return tilt > pourAngle && height > WorkbenchScale.Meters(minHeightAboveGlass);
         }
 
         void Paint(Vector2 uv)

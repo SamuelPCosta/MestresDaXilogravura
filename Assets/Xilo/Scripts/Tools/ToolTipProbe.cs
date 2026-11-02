@@ -29,7 +29,7 @@ namespace Xilo.Tools
     {
         const string LogCategory = "Probe";
 
-        [Header("TIP CONTACT DISTANCE (meters) — how close the tip must be to paint")]
+        [Header("TIP CONTACT DISTANCE (meters at the WorkbenchScale reference) — how close the tip must be to paint")]
         [Tooltip("How far beyond the tip a surface still counts as touched. Increase to paint from farther away. Shown as the yellow gizmo line.")]
         [SerializeField, Range(0f, 0.15f)] float contactDistance = 0.015f;
         [Tooltip("How far behind the tip the ray starts, so contact still works if the tip sinks into the surface.")]
@@ -90,8 +90,9 @@ namespace Xilo.Tools
                 return false;
 
             Vector3 direction = sample.forward;
-            Vector3 origin = sample.position - direction * backOffset;
-            bool hitSurface = Physics.Raycast(origin, direction, out RaycastHit hit, backOffset + contactDistance, surfaceMask, QueryTriggerInteraction.Ignore)
+            float back = WorkbenchScale.Meters(backOffset);
+            Vector3 origin = sample.position - direction * back;
+            bool hitSurface = Physics.Raycast(origin, direction, out RaycastHit hit, back + WorkbenchScale.Meters(contactDistance), surfaceMask, QueryTriggerInteraction.Ignore)
                 && hit.collider is MeshCollider;
 
             if (hitSurface)
@@ -143,8 +144,8 @@ namespace Xilo.Tools
                     continue;
                 bool isTouching = Application.isPlaying && touching != null && i < touching.Length && touching[i];
                 Gizmos.color = isTouching ? Color.green : Color.yellow;
-                Vector3 start = samples[i].position - samples[i].forward * backOffset;
-                Gizmos.DrawLine(start, samples[i].position + samples[i].forward * contactDistance);
+                Vector3 start = samples[i].position - samples[i].forward * WorkbenchScale.Meters(backOffset);
+                Gizmos.DrawLine(start, samples[i].position + samples[i].forward * WorkbenchScale.Meters(contactDistance));
                 Gizmos.DrawWireSphere(samples[i].position, 0.004f);
             }
         }

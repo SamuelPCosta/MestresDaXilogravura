@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using Xilo.Core;
 
 namespace Xilo.Tools
 {
@@ -10,9 +11,9 @@ namespace Xilo.Tools
     {
         static readonly List<SurfaceBlocker> active = new();
 
-        [Tooltip("Blocks only while the hand holding the tool is above the top face or at most this deep under it (meters); a hand further down (e.g. under the desk) is left alone.")]
+        [Tooltip("Blocks only while the hand holding the tool is above the top face or at most this deep under it (meters at the WorkbenchScale reference); a hand further down (e.g. under the desk) is left alone.")]
         [SerializeField, Min(0f)] float maxHandDepth = 0.15f;
-        [Tooltip("Extra border around the slab that still blocks (meters).")]
+        [Tooltip("Extra border around the slab that still blocks (meters at the WorkbenchScale reference).")]
         [SerializeField, Min(0f)] float margin = 0.005f;
 
         MeshCollider meshCollider;
@@ -51,7 +52,7 @@ namespace Xilo.Tools
         // True when a tool held at this hand position should be kept on top (hand above or only slightly under).
         public bool Guards(Vector3 handPosition)
         {
-            return SignedDepth(handPosition) <= maxHandDepth;
+            return SignedDepth(handPosition) <= WorkbenchScale.Meters(maxHandDepth);
         }
 
         // How far (meters, along Normal) a point is under the top face, inside the slab outline; 0 if it isn't.
@@ -75,7 +76,7 @@ namespace Xilo.Tools
             Vector3 local = transform.InverseTransformPoint(worldPoint);
             for (int i = 0; i < 3; i++)
             {
-                if (i != thinAxis && Mathf.Abs(local[i] - localBounds.center[i]) > localBounds.extents[i] + margin / Mathf.Abs(transform.lossyScale[i]))
+                if (i != thinAxis && Mathf.Abs(local[i] - localBounds.center[i]) > localBounds.extents[i] + WorkbenchScale.Meters(margin) / Mathf.Abs(transform.lossyScale[i]))
                     return false;
             }
             return true;
