@@ -1,1 +1,0 @@
-C:\Unity\MestresDaXilogravura\Library\Bee\Android\Prj\IL2CPP\Gradle\unityLibrary\build\intermediates\cxx\Debug\481uq3g2\obj\arm64-v8a

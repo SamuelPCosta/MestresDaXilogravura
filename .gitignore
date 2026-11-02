@@ -19,3 +19,6 @@
 sysinfo.txt
 # Prints saved by the app (runtime output)
 /SavedImages/
+
+# Unity Android build temp
+/.utmp/
