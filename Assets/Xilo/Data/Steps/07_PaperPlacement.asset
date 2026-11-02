@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Xilo.Runtime::Xilo.Core.StepDefinition
   id: 7
   title: Posicione o papel
-  instruction: Pegue uma folha e coloque sobre a matriz.
+  instruction: Interaja com as folhas para colocar uma sobre a matriz.
   toolId: 6
   surface: 1
   maskProperty: 

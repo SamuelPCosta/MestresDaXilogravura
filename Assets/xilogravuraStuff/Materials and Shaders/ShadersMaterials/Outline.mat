@@ -47,7 +47,7 @@ Material:
     - _DstBlendAlpha: 0
     - _QueueControl: 0
     - _QueueOffset: 25
-    - _Size: 0.01
+    - _Size: 0.005
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _Surface: 0

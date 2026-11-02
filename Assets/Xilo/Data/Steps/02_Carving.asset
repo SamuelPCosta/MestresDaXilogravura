@@ -18,7 +18,7 @@ MonoBehaviour:
   toolId: 2
   surface: 1
   maskProperty: SculptMask
-  coverageTarget: 2
-  minCoverage: 0.1
+  coverageTarget: 5
+  minCoverage: 0.2
   instructionClip: {fileID: 0}
   toolLoopClip: {fileID: 0}

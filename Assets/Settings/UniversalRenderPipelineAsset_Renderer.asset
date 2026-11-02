@@ -123,7 +123,7 @@ MonoBehaviour:
     DirectLightingStrength: 0.4
     Radius: 0.035
     Samples: 2
-    BlurQuality: 2
+    BlurQuality: 0
     Falloff: 100
     SampleCount: -1
 --- !u!114 &6191591634502991263
