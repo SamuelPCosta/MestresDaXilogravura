@@ -6,7 +6,7 @@ using Xilo.Tools;
 
 namespace Xilo.Steps
 {
-    // Paper placement step: the "Colocar papel" button animates the sheet onto the matrix, then advances.
+    // Paper placement step: clicking the paper stack (PaperStackPicker) animates the sheet onto the matrix, then advances.
     // Tools in the way (the baren) hop up along their local Y while the sheet passes.
     // Coming back to this step returns the sheet to its starting pose.
     public sealed class PaperPlacementHandler : StepHandlerBase, IStepAction
@@ -44,7 +44,7 @@ namespace Xilo.Steps
             flow = context.Flow;
             CaptureHome();
             ReportProgress(0f);
-            ReportCanAdvance(true);
+            ReportCanAdvance(false);
 
             if (isPlaced)
                 ReturnHome(animated: true);
@@ -59,9 +59,12 @@ namespace Xilo.Steps
             ReportProgress(0f);
         }
 
+        // False while another step runs or the sheet is still moving (e.g. coming back to the stack).
+        public bool CanPlace => IsActive && paper != null && !paper.Tween.IsMoving;
+
         public void PerformAction()
         {
-            if (!IsActive || paper == null || paper.Tween.IsMoving)
+            if (!CanPlace)
                 return;
 
             XiloLog.Info(LogCategory, "Placing the sheet on the matrix", this);

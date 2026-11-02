@@ -21,7 +21,6 @@ namespace Xilo.UI
         [Header("Buttons")]
         [SerializeField] Button backButton;
         [SerializeField] Button nextButton;
-        [SerializeField] Button placeSheetButton;
         [SerializeField] Button showResultButton;
         [SerializeField] Button saveButton;
         [SerializeField] Button restartButton;
@@ -51,7 +50,6 @@ namespace Xilo.UI
 
             Bind(backButton, flow.Back);
             Bind(nextButton, flow.Next);
-            Bind(placeSheetButton, flow.PerformStepAction);
             Bind(showResultButton, flow.PerformStepAction);
             Bind(saveButton, RequestSave);
             Bind(restartButton, flow.Restart);
@@ -80,8 +78,7 @@ namespace Xilo.UI
         {
             currentStep = definition != null ? definition.Id : StepId.ArtSelection;
 
-            SetVisible(nextButton, currentStep is not (StepId.ArtSelection or StepId.PaperPlacement or StepId.Pressing or StepId.Reveal));
-            SetVisible(placeSheetButton, currentStep == StepId.PaperPlacement);
+            SetVisible(nextButton, currentStep is not (StepId.ArtSelection or StepId.Pressing or StepId.Reveal));
             SetVisible(showResultButton, currentStep == StepId.Pressing);
             SetVisible(saveButton, currentStep == StepId.Reveal);
             SetVisible(exitButton, currentStep == StepId.Reveal);
@@ -99,7 +96,7 @@ namespace Xilo.UI
         // Updates the advance buttons and plays the unlock sound on a disabled → enabled change of a visible Next/Show result.
         void HandleCanAdvance(bool canAdvance)
         {
-            foreach (Button advance in new[] { nextButton, placeSheetButton, showResultButton })
+            foreach (Button advance in new[] { nextButton, showResultButton })
             {
                 if (advance != null)
                     advance.interactable = canAdvance;
@@ -179,10 +176,10 @@ namespace Xilo.UI
 
         IEnumerable<Button> AllButtons()
         {
-            return new[] { backButton, nextButton, placeSheetButton, showResultButton, saveButton, restartButton };
+            return new[] { backButton, nextButton, showResultButton, saveButton, restartButton };
         }
 
-        // Buttons shown for the first time (e.g. Place sheet) get laid out before their label has measured itself,
+        // Buttons shown for the first time (e.g. Show result) get laid out before their label has measured itself,
         // so the icon ends up under the text. Measures the labels and rebuilds the icon+text layout now and next frame.
         void RebuildButtonLayouts()
         {
