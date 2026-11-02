@@ -40,6 +40,7 @@ namespace Xilo.Core
         ArtDark,
         ArtLight,
         Uncarved,
-        Inked
+        Inked,
+        Unsketched
     }
 }

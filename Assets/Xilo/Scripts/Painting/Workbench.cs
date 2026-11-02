@@ -29,6 +29,9 @@ namespace Xilo.Painting
         // The art as the shaders and the coverage see it (fitted to the matrix proportions).
         public Texture CurrentArt => fittedArt;
 
+        // Where the art image sits on the matrix UVs, without the white bars that fit it to the matrix proportions.
+        public Rect ArtRect { get; private set; } = new(0f, 0f, 1f, 1f);
+
         public event Action<Texture> ArtApplied;
 
         void Start()
@@ -99,6 +102,7 @@ namespace Xilo.Painting
                 ? new Vector2(1f, artAspect / matrixAspect)
                 : new Vector2(matrixAspect / artAspect, 1f);
             Vector2 min = (Vector2.one - size) * 0.5f;
+            ArtRect = new Rect(min, size);
 
             // A clamped copy keeps the outside of the art filled with its (white) border instead of repeating it.
             RenderTexture clamped = RenderTexture.GetTemporary(art.width, art.height, 0, RenderTextureFormat.ARGB32);

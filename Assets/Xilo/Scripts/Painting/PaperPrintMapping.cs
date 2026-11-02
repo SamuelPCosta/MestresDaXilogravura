@@ -109,8 +109,7 @@ namespace Xilo.Painting
             if (mapped == null)
                 return;
 
-            float vertical = sheetAspect > 0f ? workbench.MatrixAspect / sheetAspect : 1f;
-            Vector2 size = new Vector2(printScale, printScale * vertical);
+            Vector2 size = PrintSize();
             Vector2 scale = new Vector2(1f / Mathf.Max(0.01f, size.x), 1f / Mathf.Max(0.01f, size.y));
             Vector2 offset = Vector2.one * 0.5f - Vector2.Scale(Vector2.one * 0.5f + printOffset, scale);
 
@@ -127,6 +126,19 @@ namespace Xilo.Painting
                 Graphics.Blit(workbench.CurrentArt, mappedArt, scale, offset);
                 paper.SetTexture(ShaderProps.SketchTexture, mappedArt);
             }
+        }
+
+        // The matrix UV printed at a sheet UV (the mapping in Refresh).
+        public Vector2 SheetToMatrix(Vector2 sheetUv)
+        {
+            Vector2 size = PrintSize();
+            return new Vector2((sheetUv.x - 0.5f - printOffset.x) / size.x, (sheetUv.y - 0.5f - printOffset.y) / size.y) + Vector2.one * 0.5f;
+        }
+
+        Vector2 PrintSize()
+        {
+            float vertical = sheetAspect > 0f ? workbench.MatrixAspect / sheetAspect : 1f;
+            return new Vector2(printScale, printScale * vertical);
         }
 
         static RenderTexture CreateLike(Texture source, string textureName)

@@ -9,7 +9,7 @@ using Xilo.Core;
 namespace Xilo.Painting
 {
     // Measures mask coverage asynchronously on a downscaled copy (AsyncGPUReadback),
-    // comparing it against a target built once from the chosen art.
+    // comparing it against a target built from the chosen art or from the masks of the previous steps.
     public sealed class CoverageMeter : MonoBehaviour
     {
         const string LogCategory = "Coverage";
@@ -22,10 +22,13 @@ namespace Xilo.Painting
 
         [Header("Dynamic targets (matrix masks)")]
         [SerializeField] SurfaceId matrixSurface = SurfaceId.Matrix;
+        [SerializeField] string sketchMaskProperty = ShaderProps.SketchMask;
         [SerializeField] string carveMaskProperty = ShaderProps.SculptMask;
         [SerializeField] string inkMaskProperty = ShaderProps.PaintMask;
         [SerializeField, Tooltip("Inked is measured in the sheet space: this surface's carve/ink masks (mapped by PaperPrintMapping).")]
         SurfaceId printSurface = SurfaceId.Paper;
+        [SerializeField, Tooltip("Places the art area on the sheet for the Inked target (the print is smaller than the sheet).")]
+        PaperPrintMapping printMapping;
 
         readonly Dictionary<CoverageTarget, bool[]> targets = new();
         RenderTexture sampleTexture;
@@ -153,34 +156,65 @@ namespace Xilo.Painting
             return targets[CoverageTarget.FullSurface];
         }
 
-        static bool IsDynamic(CoverageTarget target) => target is CoverageTarget.Uncarved or CoverageTarget.Inked;
+        static bool IsDynamic(CoverageTarget target) => target is CoverageTarget.Uncarved or CoverageTarget.Inked or CoverageTarget.Unsketched;
 
-        // Reads the matrix masks once when a step starts tracking and builds its target:
-        // Uncarved = not carved; Inked = inked by the roller and not carved (the printable area).
+        // Reads the masks left by the previous steps once when a step starts tracking and builds its target:
+        // Unsketched = where the pencil didn't go inside the art rectangle (what the gouge removes);
+        // Uncarved = the drawing strokes still in relief (what sanding and inking work on);
+        // Inked = the drawing strokes inked on the relief (what prints, measured on the sheet).
+        // The art background and the white bars around the art never count, carved or not.
         void BuildDynamicTarget(CoverageTarget target)
         {
             targets.Remove(target);
-            PaintableSurface source = workbench != null ? workbench.Get(target == CoverageTarget.Inked ? printSurface : matrixSurface) : null;
-            RenderTexture carveMask = source != null ? source.GetMask(carveMaskProperty) : null;
+            bool onSheet = target == CoverageTarget.Inked;
+            bool[] region = target == CoverageTarget.Unsketched ? ArtArea() : Drawing(onSheet);
+            PaintableSurface source = workbench != null ? workbench.Get(onSheet ? printSurface : matrixSurface) : null;
+            RenderTexture previousMask = source != null ? source.GetMask(target == CoverageTarget.Unsketched ? sketchMaskProperty : carveMaskProperty) : null;
             RenderTexture inkMask = source != null ? source.GetMask(inkMaskProperty) : null;
-            if (carveMask == null || (target == CoverageTarget.Inked && inkMask == null))
+            if (previousMask == null || (onSheet && inkMask == null))
             {
-                XiloLog.Warn(LogCategory, $"Matrix masks for {target} not found, using full surface", this);
-                targets[target] = targets[CoverageTarget.FullSurface];
+                XiloLog.Warn(LogCategory, $"Masks for {target} not found, using the whole region", this);
+                targets[target] = region;
                 return;
             }
 
             int version = trackingVersion;
-            ReadMask(carveMask, version, carve =>
+            ReadMask(previousMask, version, previous =>
             {
-                bool[] uncarved = CoverageCalculator.BuildUnpaintedTarget(carve);
-                if (target == CoverageTarget.Uncarved)
+                bool[] untouched = CoverageCalculator.Intersect(CoverageCalculator.BuildUnpaintedTarget(previous), region);
+                if (!onSheet)
                 {
-                    StoreDynamicTarget(target, uncarved);
+                    StoreDynamicTarget(target, untouched, region);
                     return;
                 }
-                ReadMask(inkMask, version, ink => StoreDynamicTarget(target, CoverageCalculator.BuildInkedTarget(ink, carve), uncarved));
+                ReadMask(inkMask, version, ink =>
+                    StoreDynamicTarget(target, CoverageCalculator.Intersect(CoverageCalculator.BuildInkedTarget(ink, previous), region), untouched, region));
             });
+        }
+
+        // The art rectangle on the matrix at the meter resolution.
+        bool[] ArtArea()
+        {
+            Rect rect = workbench != null ? workbench.ArtRect : new Rect(0f, 0f, 1f, 1f);
+            return CoverageCalculator.BuildRectTarget(resolution, rect);
+        }
+
+        // The dark strokes of the art (what stays in relief and prints): on the matrix, or where the print lands on the sheet.
+        bool[] Drawing(bool onSheet)
+        {
+            if (!targets.TryGetValue(CoverageTarget.ArtDark, out bool[] strokes))
+            {
+                XiloLog.Warn(LogCategory, "Art strokes not ready, using the art rectangle", this);
+                strokes = ArtArea();
+            }
+            if (!onSheet)
+                return strokes;
+            if (printMapping == null)
+            {
+                XiloLog.Warn(LogCategory, "Print mapping not assigned, the strokes are measured as on the matrix", this);
+                return strokes;
+            }
+            return CoverageCalculator.Remap(strokes, resolution, uv => printMapping.SheetToMatrix(uv));
         }
 
         // An empty target would count as already complete (nothing left to cover) and unlock the step at once,

@@ -53,6 +53,47 @@ namespace Xilo.Painting
             return result;
         }
 
+        // Pixels of a square buffer (resolution x resolution, row 0 at v = 0) whose centers fall inside a UV rectangle.
+        public static bool[] BuildRectTarget(int resolution, UnityEngine.Rect uvRect)
+        {
+            var result = new bool[resolution * resolution];
+            for (int y = 0; y < resolution; y++)
+            {
+                float v = (y + 0.5f) / resolution;
+                for (int x = 0; x < resolution; x++)
+                    result[y * resolution + x] = uvRect.Contains(new UnityEngine.Vector2((x + 0.5f) / resolution, v));
+            }
+            return result;
+        }
+
+        // Resamples a square target into another UV space: each destination pixel reads the source pixel at
+        // toSource(its UV); outside the source (UV beyond 0..1) it is off.
+        public static bool[] Remap(bool[] source, int resolution, Func<UnityEngine.Vector2, UnityEngine.Vector2> toSource)
+        {
+            var result = new bool[resolution * resolution];
+            for (int y = 0; y < resolution; y++)
+            {
+                for (int x = 0; x < resolution; x++)
+                {
+                    UnityEngine.Vector2 uv = toSource(new UnityEngine.Vector2((x + 0.5f) / resolution, (y + 0.5f) / resolution));
+                    if (uv.x < 0f || uv.x >= 1f || uv.y < 0f || uv.y >= 1f)
+                        continue;
+                    result[y * resolution + x] = source[(int)(uv.y * resolution) * resolution + (int)(uv.x * resolution)];
+                }
+            }
+            return result;
+        }
+
+        // Pixels set in both targets.
+        public static bool[] Intersect(bool[] first, bool[] second)
+        {
+            int pixelCount = Math.Min(first.Length, second.Length);
+            var result = new bool[pixelCount];
+            for (int i = 0; i < pixelCount; i++)
+                result[i] = first[i] && second[i];
+            return result;
+        }
+
         // Fraction (0..1) of target pixels whose mask red channel is painted (at or above the threshold).
         public static float Compute(ReadOnlySpan<byte> maskRgba, bool[] target, byte paintedThreshold = PaintedThreshold)
         {
