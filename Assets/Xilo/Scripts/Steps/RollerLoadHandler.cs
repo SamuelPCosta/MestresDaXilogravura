@@ -19,6 +19,8 @@ namespace Xilo.Steps
         [SerializeField] Workbench workbench;
         [SerializeField] RollerInk rollerInk;
         [SerializeField] string inkMaskProperty = ShaderProps.InkMask;
+        [Tooltip("Seconds after the roller is loaded before moving on to inking the matrix by itself. Negative = wait for Next.")]
+        [SerializeField] float autoAdvanceDelay = 0.8f;
 
         XiloTool roller;
         ToolTipProbe probe;
@@ -78,6 +80,8 @@ namespace Xilo.Steps
             roller?.EndUse();
             ReportProgress(1f);
             ReportCanAdvance(true);
+            if (autoAdvanceDelay >= 0f)
+                AdvanceAfter(autoAdvanceDelay, () => rollerInk.IsLoaded);
         }
 
         // Without a readback (or with an empty mask) any glass contact counts, so the user never gets stuck.

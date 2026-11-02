@@ -33,8 +33,13 @@ namespace Xilo.Steps
         [SerializeField] ParticleSystem impactParticles;
         [Tooltip("Extra seconds added to the computed fall time (negative = sooner).")]
         [SerializeField] float landingDelayOffset;
+        [Tooltip("Seconds after the pot stops pouring (with enough ink, once the drops landed) before moving on to " +
+                 "loading the roller by itself. Negative = wait for Next.")]
+        [SerializeField] float autoAdvanceDelay = 0.8f;
 
         XiloTool pot;
+        bool enoughInk;
+        bool pouredThisVisit;
         PaintableSurface glass;
         RenderTexture mask;
         Vector2? lastUv;
@@ -65,6 +70,8 @@ namespace Xilo.Steps
             if (!ResolveReferences())
                 return;
 
+            enoughInk = false;
+            pouredThisVisit = false;
             coverageMeter.Track(mask, Definition.CoverageTarget, HandleCoverage);
             lastLoggedDecile = -1;
             ReportCanAdvance(false);
@@ -260,6 +267,8 @@ namespace Xilo.Steps
             {
                 pourStartTime = Time.time;
                 streamReaching = false;
+                pouredThisVisit = true;
+                CancelAdvance();
                 return;
             }
 
@@ -270,12 +279,26 @@ namespace Xilo.Steps
             pot?.EndUse();
             if (pourParticles != null)
                 pourParticles.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+            ScheduleAdvance();
+        }
+
+        // Moves on to loading the roller once enough ink is on the glass and the pot is upright again
+        // (never in the middle of a pour), after the last drops have landed. Coming back to this step with the ink
+        // already there doesn't move on until the visitor pours again.
+        void ScheduleAdvance()
+        {
+            if (autoAdvanceDelay < 0f || !pouredThisVisit || isPouring || !enoughInk || IsAdvancePending)
+                return;
+            float landing = impactStopTime == float.MaxValue ? 0f : Mathf.Max(0f, impactStopTime - Time.time);
+            AdvanceAfter(landing + autoAdvanceDelay, () => !isPouring && enoughInk);
         }
 
         void HandleCoverage(float coverage)
         {
             ReportProgress(coverage);
-            ReportCanAdvance(coverage >= Definition.MinCoverage);
+            enoughInk = coverage >= Definition.MinCoverage;
+            ReportCanAdvance(enoughInk);
+            ScheduleAdvance();
 
             int decile = Mathf.FloorToInt(coverage * 10f);
             if (decile == lastLoggedDecile)
