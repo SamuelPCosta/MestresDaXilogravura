@@ -22,9 +22,11 @@ namespace Xilo.UI
         [SerializeField] Button backButton;
         [SerializeField] Button nextButton;
         [SerializeField] Button showResultButton;
-        [SerializeField] Button saveButton;
         [SerializeField] Button restartButton;
-        [Tooltip("Back to the menu scene; shown only together with Save (after the reveal).")]
+        [Tooltip("Shown only after the reveal; holds Save and Exit, which stay active inside it.")]
+        [SerializeField] GameObject finalButtons;
+        [SerializeField] Button saveButton;
+        [Tooltip("Back to the menu scene.")]
         [SerializeField] Button exitButton;
         [SerializeField] string menuScene = "Menu";
 
@@ -54,7 +56,10 @@ namespace Xilo.UI
             Bind(saveButton, RequestSave);
             Bind(restartButton, flow.Restart);
             Bind(exitButton, ExitToMenu);
-            SetVisible(exitButton, false);
+            if (finalButtons == null)
+                XiloLog.Warn(LogCategory, "Final buttons (Save/Exit) not assigned", this);
+            else
+                finalButtons.SetActive(false);
         }
 
         void OnEnable()
@@ -80,8 +85,8 @@ namespace Xilo.UI
 
             SetVisible(nextButton, currentStep is not (StepId.ArtSelection or StepId.Pressing or StepId.Reveal));
             SetVisible(showResultButton, currentStep == StepId.Pressing);
-            SetVisible(saveButton, currentStep == StepId.Reveal);
-            SetVisible(exitButton, currentStep == StepId.Reveal);
+            if (finalButtons != null)
+                finalButtons.SetActive(currentStep == StepId.Reveal);
             SetVisible(restartButton, true);
             SetVisible(backButton, true);
             RefreshGroups();
@@ -176,7 +181,7 @@ namespace Xilo.UI
 
         IEnumerable<Button> AllButtons()
         {
-            return new[] { backButton, nextButton, showResultButton, saveButton, restartButton };
+            return new[] { backButton, nextButton, showResultButton, restartButton };
         }
 
         // Buttons shown for the first time (e.g. Show result) get laid out before their label has measured itself,
@@ -196,7 +201,7 @@ namespace Xilo.UI
 
         void RebuildVisibleButtons()
         {
-            foreach (Button button in AllButtons().Append(exitButton))
+            foreach (Button button in AllButtons().Append(saveButton).Append(exitButton))
             {
                 if (!IsShown(button))
                     continue;

@@ -82,20 +82,8 @@ namespace Xilo.Tools
             if (outlineMaterial == null)
                 return;
 
-            int after = outlineMaterial.renderQueue + 1;
-            foreach (Renderer target in GetComponentsInChildren<Renderer>(true))
-            {
-                if (outlines.Contains(target as MeshRenderer) || target.sharedMaterials.All(material => material == null || material.renderQueue >= after))
-                    continue;
-
-                Material[] materials = target.materials;
-                foreach (Material material in materials)
-                {
-                    raisedMaterials.Add(material);
-                    if (material.renderQueue < after)
-                        material.renderQueue = after;
-                }
-            }
+            IEnumerable<Renderer> parts = GetComponentsInChildren<Renderer>(true).Where(target => !outlines.Contains(target as MeshRenderer));
+            DrawAfterOutline.Raise(parts, outlineMaterial.renderQueue + 1, raisedMaterials);
         }
 
         // Asks for the outline (e.g. the tool of the current step); it only shows while the tool is not held.
