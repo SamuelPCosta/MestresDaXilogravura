@@ -13,7 +13,7 @@ namespace Xilo.EditorTools
     {
         public const string Label = "OutlineNormals";
 
-        public override uint GetVersion() => 1;
+        public override uint GetVersion() => 3;
 
         void OnPostprocessModel(GameObject root)
         {

@@ -10,7 +10,14 @@ namespace Xilo.EditorTools
     static class SmoothNormals
     {
         public const int Channel = 3;
-        const float WeldPrecision = 1e5f;
+
+        // Positions are measured relative to the mesh size (as if it were 1 unit big): meshes exported in
+        // centimeters have such tiny numbers that Unity's Normalize returns zero for their face normals.
+        const float WeldCell = 1e-5f;
+
+        // Below this fraction of the summed weights the face normals cancel out (both sides of a thin sheet meet at
+        // the same position): the direction would be noise and the hull would spike, so the vertex normal is used.
+        const float CancelledFraction = 0.05f;
 
         public static void WriteToUV(Mesh mesh)
         {
@@ -20,51 +27,63 @@ namespace Xilo.EditorTools
         public static List<Vector3> Compute(Mesh mesh)
         {
             Vector3[] vertices = mesh.vertices;
-            var sums = new Dictionary<Vector3Int, Vector3>();
+            float size = mesh.bounds.size.magnitude;
+            if (size > 0f)
+            {
+                for (int i = 0; i < vertices.Length; i++)
+                    vertices[i] /= size;
+            }
+            float cell = WeldCell;
+            var sums = new Dictionary<Vector3Int, Vector4>();
 
             for (int subMesh = 0; subMesh < mesh.subMeshCount; subMesh++)
             {
                 int[] triangles = mesh.GetTriangles(subMesh);
                 for (int i = 0; i + 2 < triangles.Length; i += 3)
-                    AddTriangle(vertices, triangles[i], triangles[i + 1], triangles[i + 2], sums);
+                    AddTriangle(vertices, triangles[i], triangles[i + 1], triangles[i + 2], cell, sums);
             }
 
             Vector3[] fallback = mesh.normals;
             var smooth = new List<Vector3>(vertices.Length);
             for (int i = 0; i < vertices.Length; i++)
             {
-                Vector3 sum = sums.TryGetValue(Key(vertices[i]), out Vector3 value) ? value : Vector3.zero;
-                if (sum.sqrMagnitude < 1e-12f && fallback.Length == vertices.Length)
+                sums.TryGetValue(Key(vertices[i], cell), out Vector4 value);
+                Vector3 sum = value;
+                bool cancelled = sum.magnitude <= value.w * CancelledFraction;
+                if (cancelled && fallback.Length == vertices.Length)
                     sum = fallback[i];
                 smooth.Add(sum.normalized);
             }
             return smooth;
         }
 
-        static void AddTriangle(Vector3[] vertices, int a, int b, int c, Dictionary<Vector3Int, Vector3> sums)
+        // Accumulates the angle-weighted face normal (xyz) and the total weight (w) per welded position.
+        static void AddTriangle(Vector3[] vertices, int a, int b, int c, float cell, Dictionary<Vector3Int, Vector4> sums)
         {
             Vector3 pa = vertices[a], pb = vertices[b], pc = vertices[c];
             Vector3 face = Vector3.Cross(pb - pa, pc - pa);
-            if (face.sqrMagnitude < 1e-20f)
+            float area = face.magnitude;
+            if (area < 1e-20f)
                 return;
-            face.Normalize();
+            // Divided by hand: Vector3.Normalize returns zero below 1e-5, which small triangles easily are.
+            face /= area;
 
-            Accumulate(sums, pa, face * Vector3.Angle(pb - pa, pc - pa));
-            Accumulate(sums, pb, face * Vector3.Angle(pc - pb, pa - pb));
-            Accumulate(sums, pc, face * Vector3.Angle(pa - pc, pb - pc));
+            Accumulate(sums, Key(pa, cell), face, Vector3.Angle(pb - pa, pc - pa));
+            Accumulate(sums, Key(pb, cell), face, Vector3.Angle(pc - pb, pa - pb));
+            Accumulate(sums, Key(pc, cell), face, Vector3.Angle(pa - pc, pb - pc));
         }
 
-        static void Accumulate(Dictionary<Vector3Int, Vector3> sums, Vector3 position, Vector3 weighted)
+        static void Accumulate(Dictionary<Vector3Int, Vector4> sums, Vector3Int key, Vector3 face, float weight)
         {
-            Vector3Int key = Key(position);
-            sums.TryGetValue(key, out Vector3 sum);
-            sums[key] = sum + weighted;
+            sums.TryGetValue(key, out Vector4 sum);
+            Vector3 weighted = face * weight;
+            sums[key] = sum + new Vector4(weighted.x, weighted.y, weighted.z, weight);
         }
 
         // Positions are welded on a fine grid so float noise between split vertices doesn't separate them.
-        static Vector3Int Key(Vector3 position)
+        static Vector3Int Key(Vector3 position, float cell)
         {
-            return Vector3Int.RoundToInt(position * WeldPrecision);
+            return Vector3Int.RoundToInt(position / cell);
         }
     }
 }
