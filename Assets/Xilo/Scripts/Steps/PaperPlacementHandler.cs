@@ -99,7 +99,8 @@ namespace Xilo.Steps
             XiloLog.Info(LogCategory, "Sheet returned to the stack", this);
         }
 
-        // Each object goes up along its own local Y and back during the sheet motion; held tools are left alone.
+        // Each object goes straight up from the desk and back during the sheet motion, whatever its own rotation;
+        // held tools are left alone.
         void HopObjectsInTheWay(float duration)
         {
             if (makeRoom == null)
@@ -109,9 +110,11 @@ namespace Xilo.Steps
             {
                 if (item == null || item.IsMoving || (item.TryGetComponent(out XiloTool tool) && tool.IsHeld))
                     continue;
-                item.Bump(item.transform.up * WorkbenchScale.Meters(makeRoomHeight), duration);
+                item.Bump(MakeRoomLift, duration);
             }
         }
+
+        Vector3 MakeRoomLift => Vector3.up * WorkbenchScale.Meters(makeRoomHeight);
 
         // The home pose is read the first time the step starts (after the legacy animator placed it).
         void CaptureHome()
@@ -138,7 +141,7 @@ namespace Xilo.Steps
             foreach (PoseTween item in makeRoom)
             {
                 if (item != null)
-                    item.Preview(item.BumpPose(item.transform.up * WorkbenchScale.Meters(makeRoomHeight)), paper.Tween.DefaultDuration, returns: false);
+                    item.Preview(item.BumpPose(MakeRoomLift), paper.Tween.DefaultDuration, returns: false);
             }
         }
 #endif
