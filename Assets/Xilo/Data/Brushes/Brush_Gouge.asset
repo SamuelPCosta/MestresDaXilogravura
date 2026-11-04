@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b981f267fecfddc448e68c9a387ee93b, type: 3}
   m_Name: Brush_Gouge
   m_EditorClassIdentifier: Xilo.Runtime::Xilo.Painting.BrushProfile
-  stampTexture: {fileID: 2800000, guid: 8731a62d8846e8745bdd8f10d1080a00, type: 3}
+  stampTexture: {fileID: 2800000, guid: 9bcb0466641f416c81f438144f2e9122, type: 3}
   lineTexture: {fileID: 2800000, guid: a1b8d5c21c34b9944b8011a7205439d8, type: 3}
   size: 0.04
   minStrokeDistance: 0.015
@@ -23,6 +23,9 @@ MonoBehaviour:
   userScalable: 1
   flatStroke: 1
   pathSmoothing: 0.85
+  stampedStroke: 1
+  strokeSpacing: 0.15
+  capTexture: {fileID: 2800000, guid: a73e36a81e9541dc8bccffb240db841b, type: 3}
   directional: 1
   fullWhiteAngle: 12
   minWhite: 0.2

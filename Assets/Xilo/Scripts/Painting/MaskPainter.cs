@@ -14,7 +14,7 @@ namespace Xilo.Painting
         [SerializeField, Tooltip("Limits for the user-chosen brush size multiplier.")]
         Vector2 brushScaleRange = new(0.25f, 5f);
 
-        const int FadeLevels = 16;
+        const int FadeLevels = 64;
 
         readonly System.Collections.Generic.Dictionary<(Texture2D, int), Texture2D> fadedBrushes = new();
         Material material;
@@ -103,6 +103,60 @@ namespace Xilo.Painting
 
             if (!brush.FlatStroke)
                 Draw(mask, Faded(brush.StampTexture, white), toUv, uvSize, 0f);
+        }
+
+        // Stamped stroke: round stamps every Stroke Spacing x diameter from one point towards the other.
+        // Returns the last stamped point; the leftover distance is carried to the next segment, so the spacing
+        // stays even along the whole stroke.
+        public Vector2 StampedLine(RenderTexture mask, BrushProfile brush, Vector2 fromUv, Vector2 toUv, Vector2 uvSize, float white = 1f)
+        {
+            float spacing = Mathf.Max(1e-5f, Mathf.Min(uvSize.x, uvSize.y) * brush.StrokeSpacing);
+            float distance = Vector2.Distance(fromUv, toUv);
+            int steps = Mathf.FloorToInt(distance / spacing);
+            if (steps == 0)
+                return fromUv;
+
+            Texture texture = Faded(brush.StampTexture, StampedWhite(brush, white));
+            Vector2 step = (toUv - fromUv) / distance * spacing;
+            Vector2 last = fromUv;
+            for (int i = 1; i <= steps; i++)
+            {
+                if (!CanDraw(mask, brush))
+                    break;
+                last = fromUv + step * i;
+                Draw(mask, texture, last, uvSize, 0f);
+            }
+            return last;
+        }
+
+        // Square end of a stamped stroke: a rectangle half a diameter long and one diameter wide, from the end point
+        // outwards, so the round tip of the last stamp becomes square.
+        public void Cap(RenderTexture mask, BrushProfile brush, Vector2 endUv, Vector2 outward, Vector2 uvSize, float white = 1f)
+        {
+            if (brush.CapTexture == null || outward.sqrMagnitude < 1e-12f || !CanDraw(mask, brush))
+                return;
+
+            outward.Normalize();
+            float diameter = Mathf.Min(uvSize.x, uvSize.y);
+            Vector2 center = endUv + outward * (diameter * 0.25f);
+            Draw(mask, Faded(brush.CapTexture, CapWhite(white)), center, new Vector2(diameter * 0.5f, diameter), Mathf.Atan2(outward.y, outward.x));
+        }
+
+        // The tip of a faint stroke has fewer overlapping stamps (about two thirds of its white), so the cap only adds what
+        // takes it to the stroke white instead of painting over it at full strength.
+        static float CapWhite(float white)
+        {
+            float tip = white * 0.65f;
+            return (white - tip) / (1f - tip);
+        }
+
+        // About 1 / spacing stamps overlap at the stroke center and each one lerps towards white, so each stamp
+        // gets the alpha whose repeated application ends at the requested white.
+        public static float StampedWhite(BrushProfile brush, float white)
+        {
+            if (white >= 1f)
+                return 1f;
+            return 1f - Mathf.Pow(1f - Mathf.Clamp01(white), brush.StrokeSpacing);
         }
 
         // Rectangle stamps (x = along the angle) from one UV point to another, close enough to form a band.

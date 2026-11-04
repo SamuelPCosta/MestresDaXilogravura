@@ -31,6 +31,13 @@ namespace Xilo.Painting
         [SerializeField] bool flatStroke;
         [Tooltip("Filters the hand tremor out of the stroke path (0 = raw, 0.9 = very smooth); fewer kinks between segments.")]
         [SerializeField, Range(0f, 0.95f)] float pathSmoothing;
+        [Tooltip("Strokes are round stamps laid at a fixed spacing instead of bands: no seams or gaps where the stroke " +
+                 "changes direction, round ends, and faint strokes keep their white where the stamps overlap.")]
+        [SerializeField] bool stampedStroke;
+        [Tooltip("Distance between stamps of a stamped stroke, as a fraction of the brush diameter.")]
+        [SerializeField, Range(0.05f, 0.5f)] float strokeSpacing = 0.15f;
+        [Tooltip("Square put at both ends of a stamped stroke so it starts and ends square (a gouge cut). Empty = round ends.")]
+        [SerializeField] Texture2D capTexture;
 
         [Header("Stroke direction (gouge)")]
         [Tooltip("Strokes going up the surface (away from the visitor) paint full white; sideways or downward ones paint fainter.")]
@@ -54,6 +61,9 @@ namespace Xilo.Painting
         public bool Directional => directional;
         public bool FlatStroke => flatStroke;
         public float PathSmoothing => pathSmoothing;
+        public bool StampedStroke => stampedStroke;
+        public float StrokeSpacing => strokeSpacing;
+        public Texture2D CapTexture => capTexture;
         public byte PaintedThreshold => (byte)Mathf.Clamp(Mathf.RoundToInt(countsAsPaintedFrom * 255f), 1, 255);
 
         // White (0..1) painted by a stroke making this angle (degrees) with the "up" direction of the surface.

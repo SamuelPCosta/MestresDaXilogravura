@@ -11,6 +11,8 @@ namespace Xilo.Steps
     public class PaintStepHandler : StepHandlerBase
     {
         const string LogCategory = "PaintStep";
+        // A turn sharper than this (e.g. going up then straight down) ends the stroke square and starts a new one.
+        const float ReversalAngle = 120f;
 
         [SerializeField] ToolRegistry tools;
         [SerializeField] Workbench workbench;
@@ -22,6 +24,7 @@ namespace Xilo.Steps
         readonly Dictionary<int, Vector3> lastPointBySample = new();
         readonly Dictionary<int, float> lastWhiteBySample = new();
         readonly Dictionary<int, Vector2> smoothedUvBySample = new();
+        readonly Dictionary<int, StrokeEnds> strokeEndsBySample = new();
         Vector2 paintedUv;
         XiloTool tool;
         ToolTipProbe probe;
@@ -61,6 +64,7 @@ namespace Xilo.Steps
             lastPointBySample.Clear();
             lastWhiteBySample.Clear();
             smoothedUvBySample.Clear();
+            strokeEndsBySample.Clear();
             lastRectangleUv = null;
         }
 
@@ -73,6 +77,7 @@ namespace Xilo.Steps
             lastPointBySample.Clear();
             lastWhiteBySample.Clear();
             smoothedUvBySample.Clear();
+            strokeEndsBySample.Clear();
             lastRectangleUv = null;
             lastLoggedDecile = -1;
             ReportProgress(0f);
@@ -123,6 +128,23 @@ namespace Xilo.Steps
                 return false;
             float white = brush.Directional ? StrokeWhite(contact) : 1f;
 
+            if (brush.StampedStroke)
+            {
+                Vector2 stampSize = brush.InMeters ? MetersToUv(brush.SizeMeters * scale) : Vector2.one * (brush.Size * scale);
+                if (continues)
+                {
+                    paintedUv = painter.StampedLine(mask, brush, lastUv, uv, stampSize, white);
+                    TrackStrokeEnds(contact.SampleIndex, lastUv, stampSize, white);
+                }
+                else
+                {
+                    painter.StampSized(mask, brush, uv, stampSize, 0f, MaskPainter.StampedWhite(brush, white));
+                    paintedUv = uv;
+                    strokeEndsBySample[contact.SampleIndex] = new StrokeEnds { Start = uv };
+                }
+                return true;
+            }
+
             if (!brush.InMeters)
             {
                 if (continues)
@@ -140,6 +162,52 @@ namespace Xilo.Steps
                 painter.StampSized(mask, brush, uv, uvSize, 0f, white);
             paintedUv = uv;
             return true;
+        }
+
+        // Square start of a stamped stroke, once it has gone half a diameter and its direction is known;
+        // the end is squared when the tool leaves the surface (CapStrokeEnd) or when the stroke turns back sharply.
+        void TrackStrokeEnds(int sample, Vector2 fromUv, Vector2 stampSize, float white)
+        {
+            if (brush.CapTexture == null || paintedUv == fromUv || !strokeEndsBySample.TryGetValue(sample, out StrokeEnds ends))
+                return;
+
+            Vector2 direction = paintedUv - fromUv;
+            if (ends.Direction != Vector2.zero && Vector2.Angle(direction, ends.Direction) > ReversalAngle)
+                RestartStrokeAtReversal(ends, fromUv);
+
+            ends.Direction = direction;
+            ends.End = paintedUv;
+            ends.Size = stampSize;
+            ends.White = white;
+            if (!ends.StartCapped && Vector2.Distance(ends.Start, paintedUv) >= Mathf.Min(stampSize.x, stampSize.y) * 0.5f)
+            {
+                painter.Cap(mask, brush, ends.Start, ends.Start - paintedUv, stampSize, white);
+                ends.StartCapped = true;
+            }
+        }
+
+        void RestartStrokeAtReversal(StrokeEnds ends, Vector2 turnUv)
+        {
+            painter.Cap(mask, brush, turnUv, ends.Direction, ends.Size, ends.White);
+            ends.Start = turnUv;
+            ends.StartCapped = false;
+        }
+
+        void CapStrokeEnd(int sample)
+        {
+            if (!strokeEndsBySample.Remove(sample, out StrokeEnds ends) || ends.Direction == Vector2.zero || mask == null)
+                return;
+            painter.Cap(mask, brush, ends.End, ends.Direction, ends.Size, ends.White);
+        }
+
+        sealed class StrokeEnds
+        {
+            public Vector2 Start;
+            public bool StartCapped;
+            public Vector2 End;
+            public Vector2 Direction;
+            public Vector2 Size;
+            public float White;
         }
 
         // Low-pass filter on the tip path (per probe sample), so hand tremor doesn't kink the stroke at every step.
@@ -217,6 +285,7 @@ namespace Xilo.Steps
 
         void HandleContactLost(int sampleIndex)
         {
+            CapStrokeEnd(sampleIndex);
             lastUvBySample.Remove(sampleIndex);
             lastPointBySample.Remove(sampleIndex);
             lastWhiteBySample.Remove(sampleIndex);
