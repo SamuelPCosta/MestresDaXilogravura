@@ -5942,7 +5942,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 270808048640999536, guid: 9609f2fd1a9e09c498eaaf744a57c1dc, type: 3}
       propertyPath: m_text
-      value: "Vamos l\xE1"
+      value: Pular intro
       objectReference: {fileID: 0}
     - target: {fileID: 270808048640999536, guid: 9609f2fd1a9e09c498eaaf744a57c1dc, type: 3}
       propertyPath: m_fontAsset
@@ -6086,7 +6086,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8626544815030505130, guid: 9609f2fd1a9e09c498eaaf744a57c1dc, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 124.77
+      value: 176.19
       objectReference: {fileID: 0}
     - target: {fileID: 8626544815030505130, guid: 9609f2fd1a9e09c498eaaf744a57c1dc, type: 3}
       propertyPath: m_AnchoredPosition.x
@@ -6412,6 +6412,10 @@ MonoBehaviour:
   fadeDuration: 0.8
   pauseBetween: 6
   startDelay: 0.2
+  skipButton: {fileID: 1519060952}
+  skipLabel: {fileID: 0}
+  skipText: Pular Intro
+  finalText: "Vamos l\xE1"
 --- !u!1 &1698005086
 GameObject:
   m_ObjectHideFlags: 0

@@ -3,7 +3,12 @@ guid: 1ff0881551db41d4ba4a311a038bf5f2
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Clothespin
+    second: {fileID: 2100000, guid: a9587bb007756724ebea133e393dd667, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0
