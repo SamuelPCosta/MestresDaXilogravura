@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using Xilo.Core;
@@ -21,6 +22,8 @@ namespace Xilo.Tools
         Vector3 homeLocalPosition;
         Quaternion homeLocalRotation;
         Coroutine returning;
+
+        public event Action ReturnedHome;
 
         void Awake()
         {
@@ -83,6 +86,7 @@ namespace Xilo.Tools
             ApplyPose(HomePosition, HomeRotation);
             returning = null;
             XiloLog.Info(LogCategory, $"Tool returned home: {tool.Id}", this);
+            ReturnedHome?.Invoke();
         }
 
         void ApplyPose(Vector3 position, Quaternion rotation)

@@ -3,11 +3,13 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 using Xilo.Core;
+using Xilo.Tools;
 
 namespace Xilo.Objects
 {
     // Ink state of the roller rubber (port of the legacy InkRollerController).
     // Drives the existing Borracha shader through a runtime material instance.
+    // Once the loaded roller has glided back home, the ink stain shows on the desk; Back and Restart hide it again.
     public sealed class RollerInk : MonoBehaviour
     {
         const string LogCategory = "Roller";
@@ -15,11 +17,17 @@ namespace Xilo.Objects
         [SerializeField] Renderer rubberRenderer;
         [SerializeField] float loadDuration = 1.25f;
 
+        [Header("Stain")]
+        [SerializeField, Tooltip("Ink mark shown on the desk when the loaded roller is back at its home pose.")]
+        GameObject stain;
+        [SerializeField] ExperienceFlow flow;
+
         [Header("Hooks")]
         public UnityEvent OnRollerLoaded = new();
 
         Material rubberMaterial;
         Coroutine loading;
+        ToolHomeReturn homeReturn;
 
         public bool IsLoaded { get; private set; }
         public bool IsLoading => loading != null;
@@ -37,6 +45,32 @@ namespace Xilo.Objects
 
             rubberMaterial = rubberRenderer.material;
             ApplyEmpty();
+            homeReturn = GetComponentInParent<ToolHomeReturn>();
+            if (homeReturn == null)
+                XiloLog.Warn(LogCategory, "No ToolHomeReturn on the roller, the ink stain will never show", this);
+            HideStain();
+        }
+
+        void OnEnable()
+        {
+            if (homeReturn != null)
+                homeReturn.ReturnedHome += HandleReturnedHome;
+            if (flow != null)
+            {
+                flow.SteppedBack += HideStain;
+                flow.Restarted += HideStain;
+            }
+        }
+
+        void OnDisable()
+        {
+            if (homeReturn != null)
+                homeReturn.ReturnedHome -= HandleReturnedHome;
+            if (flow != null)
+            {
+                flow.SteppedBack -= HideStain;
+                flow.Restarted -= HideStain;
+            }
         }
 
         void OnDestroy()
@@ -84,6 +118,22 @@ namespace Xilo.Objects
             XiloLog.Info(LogCategory, "Roller loaded", this);
             Loaded?.Invoke();
             OnRollerLoaded.Invoke();
+        }
+
+        void HandleReturnedHome()
+        {
+            if (!IsLoaded || stain == null || stain.activeSelf)
+                return;
+            stain.SetActive(true);
+            XiloLog.Info(LogCategory, "Roller back home with ink, stain shown", this);
+        }
+
+        void HideStain()
+        {
+            if (stain == null || !stain.activeSelf)
+                return;
+            stain.SetActive(false);
+            XiloLog.Info(LogCategory, "Ink stain hidden", this);
         }
 
         void ApplyEmpty()

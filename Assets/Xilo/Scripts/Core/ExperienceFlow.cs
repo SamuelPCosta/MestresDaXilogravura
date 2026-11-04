@@ -24,6 +24,7 @@ namespace Xilo.Core
         public event Action<float> ProgressChanged;
         public event Action<bool> CanAdvanceChanged;
         public event Action Restarted;
+        public event Action SteppedBack;
 
         public StepId CurrentStep => machine.Current;
         public StepDefinition CurrentDefinition => CurrentHandler.Definition;
@@ -80,6 +81,7 @@ namespace Xilo.Core
                 XiloLog.Info(LogCategory, $"Back: cleared {machine.Current}", this);
                 ExitCurrent();
                 machine.TryGoBack();
+                SteppedBack?.Invoke();
                 EnterCurrent();
             }
             catch (Exception exception)
