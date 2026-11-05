@@ -8859,7 +8859,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Xilo.Runtime::Xilo.Rig.HeadHeightAnchor
   trackedCamera: {fileID: 2105231744}
-  target: {fileID: 912906408}
+  targets:
+  - {fileID: 912906408}
   useSceneDistance: 1
   distanceBelowCamera: 0
   minTrackedHeight: 0.5
