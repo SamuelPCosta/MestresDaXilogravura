@@ -9,7 +9,7 @@ namespace Xilo.Steps
     // pourAngle relative to the glass normal and the spout is above the glass surface.
     // The ink lands while the front of the falling stream reaches the glass: its fall since the pour started is
     // computed from the stream settings and scale (no physics) and compared with the current spout height every step.
-    // The splash particles follow the landing point.
+    // The splash particles follow the landing point, and random drops are painted around it (splatter).
     public sealed class InkPourHandler : StepHandlerBase
     {
         const string LogCategory = "InkPour";
@@ -37,6 +37,15 @@ namespace Xilo.Steps
                  "loading the roller by itself. Negative = wait for Next.")]
         [SerializeField] float autoAdvanceDelay = 0.8f;
 
+        [Header("Splatter")]
+        [Tooltip("Drops painted around the landing point per second while the ink is landing. 0 = none.")]
+        [SerializeField, Min(0f)] float dropsPerSecond = 8f;
+        [Tooltip("Smallest and largest drop, as a fraction of the brush size.")]
+        [SerializeField, Min(0.01f)] float dropSizeMin = 0.08f;
+        [SerializeField, Min(0.01f)] float dropSizeMax = 0.25f;
+        [Tooltip("How far from the landing point the drops fall, in brush sizes.")]
+        [SerializeField, Min(0f)] float dropSpread = 1.5f;
+
         XiloTool pot;
         bool enoughInk;
         bool pouredThisVisit;
@@ -49,6 +58,7 @@ namespace Xilo.Steps
         float fallTime;
         float impactStopTime = float.MaxValue;
         int lastLoggedDecile = -1;
+        float pendingDrops;
 
         void Awake()
         {
@@ -241,6 +251,22 @@ namespace Xilo.Steps
             else
                 painter.Stamp(mask, brush, uv);
             lastUv = uv;
+            PaintSplatter(uv);
+        }
+
+        // Random drops around the landing point; the count per second is spread over the physics steps.
+        void PaintSplatter(Vector2 centerUv)
+        {
+            pendingDrops += dropsPerSecond * Time.fixedDeltaTime;
+            float minSize = Mathf.Min(dropSizeMin, dropSizeMax);
+            float maxSize = Mathf.Max(dropSizeMin, dropSizeMax);
+            while (pendingDrops >= 1f)
+            {
+                pendingDrops -= 1f;
+                float distance = brush.Size * Random.Range(0.5f, Mathf.Max(0.5f, dropSpread));
+                Vector2 uv = centerUv + Random.insideUnitCircle.normalized * distance;
+                painter.Stamp(mask, brush, uv, Random.Range(minSize, maxSize));
+            }
         }
 
         // Starts/stops the pouring feedback (sound through the pot, stream particles at the spout).
