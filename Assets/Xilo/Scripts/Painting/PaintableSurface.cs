@@ -12,7 +12,7 @@ namespace Xilo.Painting
         public RenderTexture mask;
         public bool ownsMask = true;
         public bool createAtRuntime;
-        public int runtimeSize = 512;
+        public int runtimeSize = 1024;
     }
 
     // A surface that exposes its masks to the painter and binds them to its material instance.
@@ -152,7 +152,11 @@ namespace Xilo.Painting
                 {
                     binding.mask = new RenderTexture(binding.runtimeSize, binding.runtimeSize, 0, RenderTextureFormat.ARGB32)
                     {
-                        name = $"{name}_{binding.property}"
+                        name = $"{name}_{binding.property}",
+                        useMipMap = true,
+                        autoGenerateMips = true,
+                        filterMode = FilterMode.Trilinear,
+                        anisoLevel = 4,
                     };
                     binding.mask.Create();
                 }
