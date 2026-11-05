@@ -26,7 +26,10 @@ MonoBehaviour:
   stampedStroke: 1
   strokeSpacing: 0.15
   capTexture: {fileID: 2800000, guid: a73e36a81e9541dc8bccffb240db841b, type: 3}
+  refineSpecks: 1
+  speckThreshold: 0.75
+  maxSpeckArea: 24
   directional: 1
-  fullWhiteAngle: 12
-  minWhite: 0.2
+  fullWhiteAngle: 15
+  minWhite: 0
   countsAsPaintedFrom: 0.15

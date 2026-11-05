@@ -39,12 +39,27 @@ namespace Xilo.Painting
         [Tooltip("Square put at both ends of a stamped stroke so it starts and ends square (a gouge cut). Empty = round ends.")]
         [SerializeField] Texture2D capTexture;
 
+        [Header("Refine (after each stroke)")]
+        [Tooltip("When the tool leaves the surface, tiny uncarved spots are turned white.")]
+        [SerializeField] bool refineSpecks;
+        [Tooltip("Mask white (0..1) below which a pixel belongs to a spot.")]
+        [SerializeField, Range(0.05f, 1f)] float speckThreshold = 0.75f;
+        [Tooltip("Largest spot (pixels of a 1024 mask, scaled to the mask size) that is turned white.")]
+        [SerializeField, Min(1)] int maxSpeckArea = 24;
+
+        [Header("Level another mask (sandpaper)")]
+        [Tooltip("Mask property of the same surface leveled where this brush painted, when the tool leaves the surface: " +
+                 "each pixel there becomes fully white or black. Empty = none.")]
+        [SerializeField] string levelsMask;
+        [Tooltip("White (0..1) from which a leveled pixel becomes white; below it, black.")]
+        [SerializeField, Range(0.05f, 0.95f)] float levelThreshold = 0.5f;
+
         [Header("Stroke direction (gouge)")]
-        [Tooltip("Strokes going up the surface (away from the visitor) paint full white; sideways or downward ones paint fainter.")]
+        [Tooltip("Strokes going up the surface (away from the visitor) paint full white; any other direction paints Min White.")]
         [SerializeField] bool directional;
         [Tooltip("Strokes within this angle (degrees) of straight up paint full white.")]
         [SerializeField, Range(0f, 90f)] float fullWhiteAngle = 12f;
-        [Tooltip("White painted by a stroke at 90 degrees or more (sideways or downward), 0..1.")]
+        [Tooltip("White painted by a stroke outside Full White Angle (diagonal, sideways or downward), 0..1; 0 = those strokes don't carve.")]
         [SerializeField, Range(0f, 1f)] float minWhite = 0.2f;
         [Tooltip("Mask white (0..1) from which a pixel counts as painted for the step progress.")]
         [SerializeField, Range(0.05f, 1f)] float countsAsPaintedFrom = 0.5f;
@@ -64,15 +79,17 @@ namespace Xilo.Painting
         public bool StampedStroke => stampedStroke;
         public float StrokeSpacing => strokeSpacing;
         public Texture2D CapTexture => capTexture;
+        public bool RefineSpecks => refineSpecks;
+        public byte SpeckThreshold => (byte)Mathf.Clamp(Mathf.RoundToInt(speckThreshold * 255f), 1, 255);
+        public int MaxSpeckArea => maxSpeckArea;
+        public string LevelsMask => levelsMask;
+        public byte LevelThreshold => (byte)Mathf.Clamp(Mathf.RoundToInt(levelThreshold * 255f), 1, 255);
         public byte PaintedThreshold => (byte)Mathf.Clamp(Mathf.RoundToInt(countsAsPaintedFrom * 255f), 1, 255);
 
         // White (0..1) painted by a stroke making this angle (degrees) with the "up" direction of the surface.
         public float WhiteForAngle(float angle)
         {
-            if (angle <= fullWhiteAngle)
-                return 1f;
-            float t = Mathf.InverseLerp(fullWhiteAngle, 90f, angle);
-            return Mathf.Lerp(1f, minWhite, Mathf.SmoothStep(0f, 1f, t));
+            return angle <= fullWhiteAngle ? 1f : minWhite;
         }
         public bool InMeters => sizeMeters > 0f;
         public bool IsRectangle => sizeMeters > 0f && lengthMeters > 0f;

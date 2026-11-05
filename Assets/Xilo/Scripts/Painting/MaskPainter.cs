@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Rendering;
 using Xilo.Core;
 
 namespace Xilo.Painting
@@ -16,10 +19,13 @@ namespace Xilo.Painting
 
         const int FadeLevels = 64;
 
-        readonly System.Collections.Generic.Dictionary<(Texture2D, int), Texture2D> fadedBrushes = new();
+        readonly Dictionary<(Texture2D, int), Texture2D> fadedBrushes = new();
         Material material;
         int stampsThisFrame;
         int lastFrame = -1;
+        readonly HashSet<RenderTexture> refining = new();
+        readonly Dictionary<RenderTexture, int> maskVersions = new();
+        Texture2D patchTexture;
 
         void Awake()
         {
@@ -39,6 +45,8 @@ namespace Xilo.Painting
                 Destroy(material);
             foreach (Texture2D faded in fadedBrushes.Values)
                 Destroy(faded);
+            if (patchTexture != null)
+                Destroy(patchTexture);
         }
 
         // Multiplier chosen by the user (brush size slider); applied by callers that opt in.
@@ -222,12 +230,155 @@ namespace Xilo.Painting
 
         public void Clear(RenderTexture mask)
         {
+            BumpVersion(mask);
             FillWith(mask, Color.clear);
         }
 
         public void Fill(RenderTexture mask)
         {
+            BumpVersion(mask);
             FillWith(mask, Color.white);
+        }
+
+        // Refine pass: reads the mask back, finds tiny dark spots off the main thread and whitens only those pixels,
+        // so strokes painted while it runs are kept. Skipped if a pass is already running or the mask was cleared meanwhile.
+        public async void RefineSpecks(RenderTexture mask, BrushProfile brush)
+        {
+            if (mask == null || brush == null || material == null || !SystemInfo.supportsAsyncGPUReadback)
+                return;
+            if (!refining.Add(mask))
+                return;
+
+            try
+            {
+                int version = VersionOf(mask);
+                byte[] pixels = await ReadBack(mask);
+                if (pixels == null)
+                    return;
+
+                int width = mask.width;
+                int height = mask.height;
+                int maxArea = Mathf.Max(1, Mathf.RoundToInt(brush.MaxSpeckArea * width * (float)height / (1024f * 1024f)));
+                byte threshold = brush.SpeckThreshold;
+                var patch = new byte[pixels.Length];
+                int found = await Task.Run(() => SpeckFinder.Find(pixels, width, height, threshold, maxArea, patch));
+
+                if (this == null || mask == null || version != VersionOf(mask) || found == 0)
+                    return;
+                ApplyPatch(mask, patch, width, height);
+                XiloLog.Info(LogCategory, $"Refine: {found} speck pixels whitened on {mask.name}", this);
+            }
+            catch (Exception exception)
+            {
+                XiloLog.Exception(LogCategory, exception, this);
+            }
+            finally
+            {
+                refining.Remove(mask);
+            }
+        }
+
+        // Where the painted mask counts as painted, every target pixel becomes fully white or black (the sandpaper
+        // finishing the carving). The whole target is rewritten, so it must not be painted while this runs.
+        public async void LevelUnder(RenderTexture painted, RenderTexture target, byte paintedThreshold, byte levelThreshold)
+        {
+            if (painted == null || target == null || !SystemInfo.supportsAsyncGPUReadback)
+                return;
+            if (painted.width != target.width || painted.height != target.height)
+            {
+                XiloLog.Warn(LogCategory, $"Level: {painted.name} and {target.name} have different sizes", this);
+                return;
+            }
+            if (!refining.Add(target))
+                return;
+
+            try
+            {
+                int version = VersionOf(target);
+                byte[] paintedPixels = await ReadBack(painted);
+                byte[] targetPixels = await ReadBack(target);
+                if (paintedPixels == null || targetPixels == null)
+                    return;
+
+                int changed = await Task.Run(() => MaskLeveler.Level(paintedPixels, targetPixels, paintedThreshold, levelThreshold));
+                if (this == null || target == null || version != VersionOf(target) || changed == 0)
+                    return;
+                Upload(target, targetPixels);
+                XiloLog.Info(LogCategory, $"Level: {changed} pixels of {target.name} leveled under {painted.name}", this);
+            }
+            catch (Exception exception)
+            {
+                XiloLog.Exception(LogCategory, exception, this);
+            }
+            finally
+            {
+                refining.Remove(target);
+            }
+        }
+
+        // RGBA32 copy of the mask (mip 0); null if the readback failed.
+        Task<byte[]> ReadBack(RenderTexture mask)
+        {
+            var completion = new TaskCompletionSource<byte[]>();
+            AsyncGPUReadback.Request(mask, 0, TextureFormat.RGBA32, request =>
+            {
+                if (request.hasError)
+                {
+                    XiloLog.Warn(LogCategory, $"Readback of {mask.name} failed", this);
+                    completion.SetResult(null);
+                    return;
+                }
+                completion.SetResult(request.GetData<byte>().ToArray());
+            });
+            return completion.Task;
+        }
+
+        // Replaces the whole mask with the pixels (same color space as the mask, so values go back unchanged).
+        void Upload(RenderTexture mask, byte[] pixels)
+        {
+            var upload = new Texture2D(mask.width, mask.height, TextureFormat.RGBA32, false, !mask.sRGB)
+            {
+                filterMode = FilterMode.Point,
+                wrapMode = TextureWrapMode.Clamp,
+            };
+            try
+            {
+                upload.LoadRawTextureData(pixels);
+                upload.Apply(false);
+                Graphics.Blit(upload, mask);
+            }
+            finally
+            {
+                Destroy(upload);
+            }
+        }
+
+        // The patch covers the whole mask 1:1 (point sampled); its alpha marks the pixels lerped to white.
+        void ApplyPatch(RenderTexture mask, byte[] patch, int width, int height)
+        {
+            if (patchTexture == null || patchTexture.width != width || patchTexture.height != height)
+            {
+                if (patchTexture != null)
+                    Destroy(patchTexture);
+                patchTexture = new Texture2D(width, height, TextureFormat.RGBA32, false, true)
+                {
+                    name = "SpeckPatch",
+                    filterMode = FilterMode.Point,
+                    wrapMode = TextureWrapMode.Clamp,
+                };
+            }
+
+            patchTexture.LoadRawTextureData(patch);
+            patchTexture.Apply(false);
+            Draw(mask, patchTexture, new Vector2(0.5f, 0.5f), Vector2.one, 0f);
+        }
+
+        int VersionOf(RenderTexture mask) => maskVersions.TryGetValue(mask, out int version) ? version : 0;
+
+        void BumpVersion(RenderTexture mask)
+        {
+            if (mask != null)
+                maskVersions[mask] = VersionOf(mask) + 1;
         }
 
         static void FillWith(RenderTexture mask, Color color)

@@ -30,6 +30,7 @@ namespace Xilo.Steps
         ToolTipProbe probe;
         PaintableSurface surface;
         RenderTexture mask;
+        RenderTexture leveledMask;
         int lastLoggedDecile = -1;
         float lastWrongSurfaceLog;
         Vector2? lastRectangleUv;
@@ -118,7 +119,8 @@ namespace Xilo.Steps
 
         // Brush per probe sample: legacy UV size, or a real size in meters converted for this surface.
         // A tool resting in place paints nothing (returns false): stamping the same spot over and over would keep
-        // whitening a faint stroke.
+        // whitening a faint stroke. A direction that paints no white ends the stroke (square end); moving in a painting
+        // direction again starts a new one.
         bool PaintRound(ToolContact contact)
         {
             float scale = brush.UserScalable ? painter.BrushScale : 1f;
@@ -127,11 +129,17 @@ namespace Xilo.Steps
             if (continues && Vector2.Distance(lastUv, uv) <= brush.MinStrokeDistance)
                 return false;
             float white = brush.Directional ? StrokeWhite(contact) : 1f;
+            if (white <= 0f)
+            {
+                CapStrokeEnd(contact.SampleIndex);
+                paintedUv = uv;
+                return true;
+            }
 
             if (brush.StampedStroke)
             {
                 Vector2 stampSize = brush.InMeters ? MetersToUv(brush.SizeMeters * scale) : Vector2.one * (brush.Size * scale);
-                if (continues)
+                if (continues && strokeEndsBySample.ContainsKey(contact.SampleIndex))
                 {
                     paintedUv = painter.StampedLine(mask, brush, lastUv, uv, stampSize, white);
                     TrackStrokeEnds(contact.SampleIndex, lastUv, stampSize, white);
@@ -294,6 +302,10 @@ namespace Xilo.Steps
                 return;
             lastRectangleUv = null;
             tool.EndUse();
+            if (brush.RefineSpecks)
+                painter.RefineSpecks(mask, brush);
+            if (leveledMask != null)
+                painter.LevelUnder(mask, leveledMask, brush.PaintedThreshold, brush.LevelThreshold);
         }
 
         void HandleCoverage(float coverage)
@@ -339,6 +351,10 @@ namespace Xilo.Steps
                 XiloLog.Error(LogCategory, $"{Id}: surface {Definition.Surface} or mask {Definition.MaskProperty} not found", this);
                 return false;
             }
+
+            leveledMask = string.IsNullOrEmpty(brush.LevelsMask) ? null : surface.GetMask(brush.LevelsMask);
+            if (!string.IsNullOrEmpty(brush.LevelsMask) && leveledMask == null)
+                XiloLog.Warn(LogCategory, $"{Id}: mask {brush.LevelsMask} to level not found on {surface.name}", this);
             return true;
         }
 

@@ -21,3 +21,5 @@ MonoBehaviour:
   toolAxis: {x: 1, y: 0, z: 0}
   stampSpacing: 0.4
   userScalable: 0
+  levelsMask: SculptMask
+  levelThreshold: 0.5
